@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <title>Search with Left Filters</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <style>
+    .collapse-content {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+    .hidden + button span,
+    #category.hidden + button span {
+      transform: rotate(-90deg);
+    }
+    .collapse-content.open {
+      max-height: 500px; /* large enough for content */
+      opacity: 1;
+    }
+
+}
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-8">
+  
+<div class="fixed top-24 mb-[40px]">
+  <h1 class="text-5xl font-bold mb-2 text-gray-900" style="cursor:pointer;" onclick="location.href='/'">Brinu me cijene</h1>
+ 
+
+</div>
+<div
+  class="fixed top-48 max-h-[80vh] overflow-auto max-w-5xl w-full box-border bg-white dark:bg-gray-800 rounded shadow-md p-6 flex gap-8 border border-gray-300 dark:border-gray-700 h-[80vh] maindiv"
+>
+    <!-- Filters Sidebar (left) -->
+    <aside class="w-64 flex-shrink-0">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-200">Filters</h2>
+      <div class="space-y-3">
+        <div>
+          <button
+            type="button"
+            class="w-full flex justify-between items-center mb-2 font-semibold text-gray-900 dark:text-gray-200"
+            aria-expanded="false"
+            aria-controls="store-filters"
+            id="store-filters-toggle"
+          >
+            Trgovina
+            <span id="arrow" class="transition-transform duration-200 rotate-[-90deg]">▼</span>
+          </button>
+          <div id="store-filters" class="space-y-3 hidden">
+            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Konzum" class="store-filter mr-2"/>Konzum</label>
+            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Ribola" class="store-filter mr-2"/>Ribola</label>
+            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Spar" class="store-filter mr-2"/>Spar</label>
+          
+          </div>
+        </div>
+        <div>
+          <button
+            type="button"
+            class="w-full flex justify-between items-center mb-2 font-semibold text-gray-900 dark:text-gray-200"
+            aria-expanded="false"
+            aria-controls="category-filters"
+            id="category-filters-toggle"
+          >
+            Kategorija
+            <span id="arrow" class="transition-transform duration-200 rotate-[-90deg]">▼</span>
+          </button>
+          <div id="category-filters" class="space-y-3 hidden">
+<label class="block text-gray-900 dark:text-gray-200">
+  <input type="checkbox" value="PROIZVODI ZA KUĆANSTVO" class="filter mr-2" /> Proizvodi za kućanstvo
+</label>
+<label class="block text-gray-900 dark:text-gray-200">
+  <input type="checkbox" value="SREDSTVA ZA ČIŠĆENJE" class="filter mr-2" /> Sredstva za čišćenje
+</label>
+<label class="block text-gray-900 dark:text-gray-200">
+  <input type="checkbox" value="HRANA" class="filter mr-2" /> Hrana
+</label>
+<label class="block text-gray-900 dark:text-gray-200">
+  <input type="checkbox" value="KOZMETIKA" class="filter mr-2" /> Kozmetika
+</label>
+<label class="block text-gray-900 dark:text-gray-200">
+  <input type="checkbox" value="PIĆE" class="filter mr-2" /> Piće
+</label>
+<label class="block text-gray-900 dark:text-gray-200">
+  <input type="checkbox" value="TOALETNE POTREPŠTINE" class="filter mr-2" /> Toaletne potrepštine
+</label>
+
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="search-category" class="font-semibold mb-2 block text-gray-900 dark:text-gray-200">Adresa</label>
+          <input
+            type="text"
+            id="address-search"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+            placeholder="Upiši adresu..."
+          />
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 flex flex-col">
+
+
+  <!-- Search bar -->
+  <div class="flex mb-6 gap-2 items-center">
+    <div class="relative flex-1">
+      <input
+        id="search"
+        type="text"
+        placeholder="Search items..."
+        class="w-full border border-gray-300 dark:border-gray-600 rounded-full p-3 pr-12 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+      />
+      <button
+        id="search-button"
+        class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition"
+        aria-label="Search"
+      >
+        &rarr;
+      </button>
+    </div>
+
+    <select
+      id="search-field-select"
+      class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+      aria-label="Search by field"
+    >
+      <option value="name">Name</option>
+      <option value="barcode">Barcode</option>
+    </select>
+
+    <select
+      id="sort-select"
+      class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+      aria-label="Sort items"
+    >
+      <option value="">Sort by</option>
+      <option value="price-asc">Price ↑</option>
+      <option value="price-desc">Price ↓</option>
+      <option value="name-asc">Name A-Z</option>
+      <option value="name-desc">Name Z-A</option>
+    </select>
+  </div>
+
+      <!-- Search results -->
+      <section id="items" class="space-y-4  overflow-auto  text-gray-900 dark:text-gray-200">
+        <!-- JS inserts results here -->
+      </section>
+    </main>
+  </div>
+
+  <button
+    id="dark-mode-toggle"
+    class="fixed bottom-6 right-6 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-3 rounded shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+    aria-label="Toggle dark mode"
+  >
+    🌓
+  </button>
+
+  <script>
+function mapCategory(str) {
+    if (typeof str !== 'string' || str.length < 2) return null;
+  const prefix = str.slice(0, 2).toUpperCase();
+  const map = {
+    'PI': 'PIĆE',
+    'KO': 'KOZMETIKA',
+    'PR': 'PROIZVODI ZA KUĆANSTVO',
+    'TO': 'TOALETNE POTREPŠTINE',
+    'SR': 'SREDSTVA ZA ČIŠĆENJE',
+    'HR': 'HRANA'
+  };
+
+  return map[prefix] || null;
+}
+
+    window.addEventListener('DOMContentLoaded', () => {
+      filters.forEach(f => f.addEventListener("change", filterItems));
+document.querySelectorAll(".category-filter, .store-filter").forEach(f => 
+  f.addEventListener("change", filterItems)
+);
+document.querySelectorAll("#address-search").forEach(f => 
+  f.addEventListener("input", filterItems)
+
+);
+
+
+    searchInput.addEventListener("change", filterItems);
+    filters.forEach(f => f.addEventListener("change", filterItems));
+  const params = new URLSearchParams(window.location.search);
+  const searchQuery = params.get('search');
+  if (searchQuery) {
+    const input = document.getElementById('search');
+    const button = document.getElementById('search-button');
+    input.value = searchQuery;
+    button.click(); // or call your search function directly
+  }
+});
+    document.querySelectorAll("button[id$='-toggle']").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const contentId = btn.id.replace(/-toggle$/, "");
+        const content = document.getElementById(contentId);
+        if (!content) return;
+
+        const hidden = content.classList.toggle("hidden");
+        const arrow = btn.querySelector("span");
+        if (arrow) arrow.style.transform = hidden ? "rotate(-90deg)" : "rotate(0deg)";
+        btn.setAttribute("aria-expanded", !hidden);
+      });
+    });
+
+    
+
+var items = [];
+const input = document.getElementById("search");
+const button = document.getElementById("search-button");
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault(); // prevent form submission or other side effects
+    button.click();
+  }
+});
+  document.getElementById('search-button').addEventListener('click', async () => {
+    const query = document.getElementById('search').value.trim();
+    if (!query) return;
+
+    try {
+      
+  // Returns true if at least one string length >= 3,
+  // else does something (like return or assign x)
+const queryParts = query.trim().split(" ");
+if (queryParts.every(s => s.length < 3)) {
+  console.warn("Query too short — skipping request.");
+  filterItems(); // or show an error to the user
+  return;
+}
+
+      const response = await fetch(`search?query=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error('Network error');
+
+      resultsDicts = await response.json();
+      items = [];
+      console.log('Loaded dicts:', resultsDicts);
+      resultsDicts.forEach(item => {
+        items.push(item);
+        //onsole.log(`pravim za predmet ${item.naziv}`);
+        itemsContainer.appendChild(createResultElement(item));
+      });
+      filterItems();
+      // You can now use resultsDicts anywhere in this script scope
+    } catch (error) {
+      console.error('Failed to fetch search results:', error);
+    }
+  });
+    const itemsContainer = document.getElementById("items");
+    const searchInput = document.getElementById("search");
+    const filters = document.querySelectorAll(".filter");
+function createResultElement(item) {
+  addressFilter = document.getElementById("address-search").value;
+  const div = document.createElement("div");
+  div.className = "border border-gray-200 rounded p-4 shadow-sm hover:shadow-md transition";
+
+  let thing = "€" + item.maloprodajna_cijena + "/kom";
+  if (item.jedinica_mjere != "KOM") {
+    thing = "€" + item.maloprodajna_cijena + "/kom <small>(€" + item.cijena_za_jedinicu_mjere + "/kg)</small>";
+  }
+
+
+
+
+
+
+  // Filter addresses based on the addressFilter (case-insensitive)
+  const filteredAddresses = item.adresa.filter(addr => 
+    addr.toLowerCase().includes(addressFilter.toLowerCase())
+  );
+
+  // If filtering removes all addresses, show some fallback
+  const addressesHtml = filteredAddresses.length
+    ? filteredAddresses.map(addr => `<a class="hover:bg-gray-300 dark:hover:bg-gray-700" href="https://www.google.com/maps/search/${encodeURIComponent(addr)}" target="_blank" rel="noopener noreferrer">${addr}</a>`).join('<br>')
+    : null;
+  if(addressesHtml === null){
+    itemsContainer.innerHTML = "<p class='text-gray-500 dark:text-gray-400'>Nema rezultata. Probajte tražiti ponovno.</p>";
+    return null;
+  }
+   const num = filteredAddresses.length;
+  let somevar;
+  if (num > 1) {
+    const lastDigit = num % 10;
+    const lastTwoDigits = num % 100;
+
+    if (lastDigit === 1 && lastTwoDigits !== 11) {
+      somevar = `Na ${num} adresu`;
+    } else if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwoDigits >= 12 && lastTwoDigits <= 14)) {
+      somevar = `Na ${num} adrese`;
+    } else {
+      somevar = `Na ${num} adresa`;
+    }
+  } else {
+    somevar = item.adresa[0];
+  }
+  div.innerHTML = `
+<div class="flex justify-between items-start mb-2 ">
+  <h3 class="font-semibold text-lg leading-none">${item.naziv}</h3>
+  <div class="flex flex-col items-end">
+    <div class="text-green-700 font-bold text-lg">${thing}</div>
+    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">${item.barkod}</div>
+  </div>
+</div>
+
+<p class="text-gray-600 dark:text-gray-300 mb-2">
+  ${somevar}
+  <button class="text-blue-500 ml-2 toggle-dropdown">+</button>
+</p>
+<div class="dropdown-content hidden mb-2 text-sm text-gray-700 dark:text-gray-400 ">
+  ${addressesHtml}
+</div>
+<div class="flex space-x-2">
+  <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">${mapCategory(item.kategorije)}</span>
+  <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">${item.trgovina}</span>
+</div>
+`;
+
+  const button = div.querySelector('.toggle-dropdown');
+  const dropdown = div.querySelector('.dropdown-content');
+
+  button.addEventListener('click', () => {
+    dropdown.classList.toggle('hidden');
+  });
+
+  return div;
+}
+
+
+    function renderItems(filteredItems) {
+      itemsContainer.innerHTML = "";
+      if (filteredItems.length === 0) {
+        itemsContainer.innerHTML = "<p class='text-gray-500 dark:text-gray-400'>Nema rezultata. Probajte tražiti ponovno.</p>";
+        return;
+      }
+      filteredItems.forEach(item => {
+        resault = createResultElement(item);
+        if (resault !== null){
+        itemsContainer.appendChild(createResultElement(item));
+        }
+      });
+    }
+
+// function filterItems() {
+//   console.log("SAAAD RADIM NEŠTO")
+//   const searchTerm = searchInput.value.toLowerCase().trim();
+//   const terms = searchTerm.split(/\s+/);
+
+//   const selectedCategories = Array.from(document.querySelectorAll(".category-filter"))
+//     .filter(cb => cb.checked)
+//     .map(cb => cb.value);
+
+
+
+//   const selectedAddresses = Array.from(document.querySelectorAll(".address-filter"))
+//     .filter(cb => cb.checked)
+//     .map(cb => cb.value);
+
+//   const filtered = items.filter(item => {
+//     const matchesSearch = terms.every(term =>
+//       item.naziv.toLowerCase().includes(term)
+//     );
+
+//     const matchesCategory =
+//       selectedCategories.length === 0 ||
+//       selectedCategories.some(cat => item.kategorije.includes(cat));
+
+
+
+//     const matchesAddress =
+//       selectedAddresses.length === 0 ||
+//       selectedAddresses.some(addr => item.adresa.toLowerCase().includes(addr.toLowerCase()));
+
+//     return matchesSearch && matchesCategory && matchesStore && matchesAddress;
+//   });
+
+
+
+//   renderItems(filtered);
+// }
+
+function filterItems() {
+  const searchTerm = searchInput.value.toLowerCase().trim();
+  const terms = searchTerm.split(/\s+/); // split by any whitespace
+
+  const selectedCategories = Array.from(document.querySelectorAll(".filter"))
+    .filter(f => f.checked)
+    .map(f => f.value);
+
+  const selectedStores = Array.from(document.querySelectorAll(".store-filter"))
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+
+  // Get address filter value
+  const addressTerm = document.getElementById("address-search").value.toLowerCase().trim();
+
+  const filtered = items.filter(item => {
+    const matchesSearch = terms.every(term =>
+      item.naziv.toLowerCase().includes(term)
+    );
+
+const matchesCategory =
+  selectedCategories.length === 0 || selectedCategories.some(cat => item.kategorije.startsWith(cat.slice(0, 2)));
+
+
+    const matchesStore =
+      selectedStores.length === 0 || selectedStores.includes(item.trgovina);
+
+    const matchesAddress = !addressTerm || item.adresa.some(addr => addr.toLowerCase().includes(addressTerm));
+
+    return matchesSearch && matchesCategory && matchesStore && matchesAddress;
+  });
+  
+  renderItems(filtered);
+}
+
+
+
+
+
+    // Initial render
+    renderItems(items);
+
+    // Dark mode toggle logic
+    const darkModeToggle = document.getElementById("dark-mode-toggle");
+
+    darkModeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      if (document.documentElement.classList.contains("dark")) {
+        localStorage.setItem("dark-mode", "enabled");
+      } else {
+        localStorage.removeItem("dark-mode");
+      }
+    });
+
+    // Apply saved preference on load
+    if (localStorage.getItem("dark-mode") === "enabled") {
+      document.documentElement.classList.add("dark");
+    }
+
+    document.getElementById("sort-select").addEventListener("change", (e) => {
+  const val = e.target.value;
+  if (!val) return renderItems(items); // or filtered items
+
+  const sorted = [...items]; // or [...items] if no filter applied
+
+  if (val === "price-asc") {
+    sorted.sort((a, b) => parseFloat(a.cijena_za_jedinicu_mjere) - parseFloat(b.cijena_za_jedinicu_mjere));
+  } else if (val === "price-desc") {
+    sorted.sort((a, b) => parseFloat(b.cijena_za_jedinicu_mjere) - parseFloat(a.cijena_za_jedinicu_mjere));
+  } else if (val === "name-asc") {
+    sorted.sort((a, b) => a.naziv.localeCompare(b.naziv));
+  } else if (val === "name-desc") {
+    sorted.sort((a, b) => b.naziv.localeCompare(a.naziv));
+  }
+
+  renderItems(sorted);
+});
+
+  </script>
+
+</body>
+</html>

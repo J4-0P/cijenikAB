@@ -18,15 +18,16 @@
 import json
 import polars as pl # type: ignore
 import zipfile
+import gzip
 
-def zip_file(input_path, output_zip_path):
-    with zipfile.ZipFile(output_zip_path, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.write(input_path, arcname=input_path.split('/')[-1])  # store only filename inside zip
-def unzip_file_in_memory(zip_path, filename_inside_zip):
-    with zipfile.ZipFile(zip_path, mode='r') as zf:
-        with zf.open(filename_inside_zip) as file:
-            data = file.read()  # bytes in memory
-    return data
+def gzip_file(input_path, output_gzip_path):
+    with open(input_path, 'rb') as f_in:
+        with gzip.open(output_gzip_path, 'wb') as f_out:
+            f_out.writelines(f_in)
+def gunzip_file(input_gzip_path):
+    with gzip.open(input_gzip_path, 'rb') as f_in:
+        return f_in.read()
+
 
 #zip_file("output.ndjson", "output.zip")
 
@@ -148,7 +149,7 @@ def sum_up_every_price_fast(characteristic, value, file, file2, df):
           .otherwise(cijena_po_jedinici)
           .alias("price")
     ])
-    return df.select(pl.col("price").drop_nulls().sum())[0, 0]
+    return df.select(pl.col("price").drop_nulls().sum()).collect()[0, 0]
 
 import timeit
 # print("krećem")
@@ -188,11 +189,12 @@ def optimal_find_all_occurences_by_characteristic(characteristic, value, file, f
         df = pl.read_ndjson(file2)
     else:
         df = df
-    df = df.filter(pl.col(characteristic) == value)
+    df = df.filter(pl.col(characteristic) == value).collect()
     return df.to_dicts() if df.height > 0 else []
 
 from functools import reduce
 import operator
+
 
 
 def optimal_find_by_characteristics(dic, file, df):
@@ -200,8 +202,8 @@ def optimal_find_by_characteristics(dic, file, df):
     mask = pl.all([pl.col(c) == v for c, v in dic.items()])
     filtered = df.filter(mask)
     return filtered.to_dicts() if filtered.height > 0 else []
-
-def find(filters: dict, file: str, df):
+import re
+def find(filters: dict, df):
     conditions = []
     for col, val in filters.items():
         if isinstance(val, dict):  # Comparison or pattern
@@ -216,10 +218,25 @@ def find(filters: dict, file: str, df):
             if "eq" in val:
                 # cast to float for numeric equality comparison
                 conditions.append(pl.col(col).cast(pl.Float64, strict=False) == val["eq"])
-            if "contains" in val:
-                conditions.append(
-                    pl.col(col).str.to_lowercase().str.contains(val["contains"].lower(), literal=True)
-    )
+            if "exclude" in val:
+                conditions.append(~pl.col(col).str.to_lowercase().str.contains(val["exclude"].lower(), literal=True))
+            contains = val["contains"]
+            if isinstance(contains, str):
+                print("JE INSTANCE")
+                contains = [contains]
+                if not any(len(s) >= 3 for s in contains):
+                     print("pre mali ti je frere")
+                     return []
+      
+
+            col_exprs = [
+                pl.col(col)
+                .cast(str)
+                .str.to_lowercase()
+                .str.contains(re.escape(contain.lower()), literal=True)
+                for contain in contains
+            ]
+            conditions.append(reduce(operator.or_, col_exprs))
 
         else:  # Exact match
             conditions.append(pl.col(col) == val)
@@ -227,16 +244,198 @@ def find(filters: dict, file: str, df):
     if not conditions:
         return []
 
-    mask = reduce(operator.and_, conditions)
-
     
-    filtered = df.filter(mask)
+    mask = reduce(operator.and_, conditions)
+    filtered = df.filter(mask).collect()
+    grouped = defaultdict(lambda: {
+        "datum": None,
+        "naziv": None,
+        "sifra": None,
+        "marka": None,
+        "neto_kolicina": None,
+        "jedinica_mjere": None,
+        "maloprodajna_cijena": None,
+        "cijena_za_jedinicu_mjere": None,
+        "maloprodajna_cijena_akcija": None,
+        "najniza_cijena": None,
+        "sidrena_cijena": None,
+        "barkod": None,
+        "kategorije": None,
+        "trgovina": None,
+        "adresa": []
+    })
+    data = filtered.to_dicts()
+    for item in data:
+        key = (item["naziv"], item["trgovina"])
+        entry = grouped[key]
+        # Set other fields once (assuming they're identical or you want the first)
+        if entry["naziv"] is None:
+            for k in entry.keys():
+                if k != "adresa":
+                    entry[k] = item.get(k)
+        # Append unique addresses only
+        if item["adresa"] not in entry["adresa"]:
+            entry["adresa"].append(item["adresa"])
+        for item in data:
+            key = (item["naziv"], item["trgovina"])
+            entry = grouped[key]
+            # Set other fields once (assuming they're identical or you want the first)
+            if entry["naziv"] is None:
+                for k in entry.keys():
+                    if k != "adresa":
+                        entry[k] = item.get(k)
+            # Append unique addresses only
+            if item["adresa"] not in entry["adresa"]:
+                entry["adresa"].append(item["adresa"])
+    
+    filtered = df.filter(mask).collect()
+    returnal = filtered.to_dicts()
+    if len(returnal) > 1000: 
+        print(filters,"je preee dugo, čak",len(returnal))
+        return []
+    return returnal if filtered.height > 0 else []
+from collections import defaultdict
+def find_all(filters: dict, df):
+    conditions = []
+    for col, val in filters.items():
+        if isinstance(val, dict):  # Comparison or pattern
+            if "lt" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) < val["lt"])
+            if "gt" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) > val["gt"])
+            if "le" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) <= val["le"])
+            if "ge" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) >= val["ge"])
+            if "eq" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) == val["eq"])
+
+            if "contains" in val:
+                for contain in val["contains"]:
+                    conditions.append(
+                        pl.col(col).str.to_lowercase().str.contains(contain.lower(), literal=True)
+                    )
+        else:  # Exact match
+            conditions.append(pl.col(col) == val)
+
+    if not conditions:
+        return []
+
+    mask = reduce(operator.and_, conditions)
+    filtered = df.filter(mask).collect()
+    grouped = defaultdict(lambda: {
+        "datum": None,
+        "naziv": None,
+        "sifra": None,
+        "marka": None,
+        "neto_kolicina": None,
+        "jedinica_mjere": None,
+        "maloprodajna_cijena": None,
+        "cijena_za_jedinicu_mjere": None,
+        "maloprodajna_cijena_akcija": None,
+        "najniza_cijena": None,
+        "sidrena_cijena": None,
+        "barkod": None,
+        "kategorije": None,
+        "trgovina": None,
+        "adresa": []
+    })
+    data = filtered.to_dicts()
+    for item in data:
+        key = (item["naziv"], item["trgovina"])
+        entry = grouped[key]
+        # Set other fields once (assuming they're identical or you want the first)
+        if entry["naziv"] is None:
+            for k in entry.keys():
+                if k != "adresa":
+                    entry[k] = item.get(k)
+        # Append unique addresses only
+        if item["adresa"] not in entry["adresa"]:
+            entry["adresa"].append(item["adresa"])
+        for item in data:
+            key = (item["naziv"], item["trgovina"])
+            entry = grouped[key]
+            # Set other fields once (assuming they're identical or you want the first)
+            if entry["naziv"] is None:
+                for k in entry.keys():
+                    if k != "adresa":
+                        entry[k] = item.get(k)
+            # Append unique addresses only
+            if item["adresa"] not in entry["adresa"]:
+                entry["adresa"].append(item["adresa"])
+
+    # Convert grouped dict back to list
+    return list(grouped.values())
     return filtered.to_dicts() if filtered.height > 0 else []
 
-if __name__ == "__main__":
-    print("Starting the script...")
-    data = unzip_file_in_memory("output.zip", "output.ndjson")
-    df = pl.read_ndjson(data)
-    print("Data loaded successfully.")
+def minimal_unique_prefix_length(strings):
+    if not strings:
+        return 0
 
-    print(find({"naziv":{"contains":"GOUDA"},"maloprodajna_cijena":{"eq":2.79}}, "output.ndjson", df))
+    max_len = max(len(s) for s in strings)
+
+    for n in range(1, max_len + 1):
+        prefixes = [s[:n] for s in strings]
+        if len(set(prefixes)) == len(strings):
+            return n
+    return max_len  # fallback if no smaller prefix can distinguish all strings
+
+def shorten_strings_to_unique_prefix(strings):
+    n = minimal_unique_prefix_length(strings)
+    return [s[:n] for s in strings]
+
+
+
+def count_all_by_barcode(df):
+
+    return df.select(pl.col("kategorije")).collect().unique().to_dict()["kategorije"].to_list()
+
+import json
+from collections import defaultdict
+
+def group_addresses_from_file(input_filepath, output_filepath):
+    grouped = defaultdict(lambda: {
+        "datum": None,
+        "naziv": None,
+        "sifra": None,
+        "marka": None,
+        "neto_kolicina": None,
+        "jedinica_mjere": None,
+        "maloprodajna_cijena": None,
+        "cijena_za_jedinicu_mjere": None,
+        "maloprodajna_cijena_akcija": None,
+        "najniza_cijena": None,
+        "sidrena_cijena": None,
+        "barkod": None,
+        "kategorije": None,
+        "trgovina": None,
+        "adresa": []
+    })
+
+    with open(input_filepath, 'r', encoding='utf-8') as f:
+        i = 0
+        for line in f:
+            i+=1
+            if i%10000==0:
+                print(i)
+            item = json.loads(line)
+            key = (item["naziv"], item["trgovina"])
+            entry = grouped[key]
+            if entry["naziv"] is None:
+                for k in entry.keys():
+                    if k != "adresa":
+                        entry[k] = item.get(k)
+            if item["adresa"] not in entry["adresa"]:
+                entry["adresa"].append(item["adresa"])
+
+    # Write combined output as NDJSON
+    with open(output_filepath, 'w', encoding='utf-8') as out:
+        for record in grouped.values():
+            out.write(json.dumps(record, ensure_ascii=False) + '\n')
+
+if __name__ == "__main__":
+    print(count_all_by_barcode(pl.scan_ndjson("output/ribola_2025-05-29.ndjson")))
+    #print(shorten_strings_to_unique_prefix(count_all_by_barcode(pl.scan_ndjson("output/ribola_2025-05-29.ndjson"))))
+    #group_addresses_from_file("output/combined_2025-05-30.ndjson","output/grouped_2025-05-30.ndjson")
+
+  
