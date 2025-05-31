@@ -26,7 +26,7 @@
       opacity: 1;
     }
 
-}
+
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-8">
@@ -103,7 +103,29 @@
             placeholder="Upiši adresu..."
           />
         </div>
-      </div>
+      
+      <div class="mb-4">
+  <label class="font-semibold mb-2 block text-gray-900 dark:text-gray-200">Cijena (€)</label>
+  <div class="flex space-x-2">
+    <input
+      type="number"
+      id="min-price"
+      class="w-1/2 border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+      placeholder="Min"
+      min="0"
+      step="0.01"
+    />
+    <input
+      type="number"
+      id="max-price"
+      class="w-1/2 border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+      placeholder="Max"
+      min="0"
+      step="0.01"
+    />
+  </div>
+</div>
+</div>
     </aside>
 
     <!-- Main content -->
@@ -133,8 +155,8 @@
       class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
       aria-label="Search by field"
     >
-      <option value="name">Name</option>
-      <option value="barcode">Barcode</option>
+      <option value="naziv">Naziv</option>
+      <option value="barkod">Barkod</option>
     </select>
 
     <select
@@ -143,8 +165,8 @@
       aria-label="Sort items"
     >
       <option value="">Sort by</option>
-      <option value="price-asc">Price ↑</option>
-      <option value="price-desc">Price ↓</option>
+        <option value="price-desc">Price ↑</option>
+      <option value="price-asc">Price ↓</option>
       <option value="name-asc">Name A-Z</option>
       <option value="name-desc">Name Z-A</option>
     </select>
@@ -243,13 +265,14 @@ if (queryParts.every(s => s.length < 3)) {
   return;
 }
 
-      const response = await fetch(`search?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`search?query=${encodeURIComponent(query)}&type=${document.getElementById("search-field-select").value}`);
       if (!response.ok) throw new Error('Network error');
 
       resultsDicts = await response.json();
       items = [];
       console.log('Loaded dicts:', resultsDicts);
       resultsDicts.forEach(item => {
+        console.log("sad turam", item);
         items.push(item);
         //onsole.log(`pravim za predmet ${item.naziv}`);
         itemsContainer.appendChild(createResultElement(item));
@@ -287,10 +310,7 @@ function createResultElement(item) {
   const addressesHtml = filteredAddresses.length
     ? filteredAddresses.map(addr => `<a class="hover:bg-gray-300 dark:hover:bg-gray-700" href="https://www.google.com/maps/search/${encodeURIComponent(addr)}" target="_blank" rel="noopener noreferrer">${addr}</a>`).join('<br>')
     : null;
-  if(addressesHtml === null){
-    itemsContainer.innerHTML = "<p class='text-gray-500 dark:text-gray-400'>Nema rezultata. Probajte tražiti ponovno.</p>";
-    return null;
-  }
+
    const num = filteredAddresses.length;
   let somevar;
   if (num > 1) {
@@ -393,6 +413,7 @@ function createResultElement(item) {
 // }
 
 function filterItems() {
+  console.log("FILTRIRAM");
   const searchTerm = searchInput.value.toLowerCase().trim();
   const terms = searchTerm.split(/\s+/); // split by any whitespace
 
@@ -407,25 +428,49 @@ function filterItems() {
   // Get address filter value
   const addressTerm = document.getElementById("address-search").value.toLowerCase().trim();
 
+  // Get min and max price inputs as numbers or null if empty/invalid
+  const minPriceInput = document.getElementById("min-price").value;
+  const maxPriceInput = document.getElementById("max-price").value;
+  const minPrice = minPriceInput ? parseFloat(minPriceInput) : null;
+  const maxPrice = maxPriceInput ? parseFloat(maxPriceInput) : null;
+
   const filtered = items.filter(item => {
+    // Determine price to check: maloprodajna_cijena first, then cijena_za_jedinicu_mjere
+    const priceRaw = item.maloprodajna_cijena ?? item.cijena_za_jedinicu_mjere;
+    if (!priceRaw) return false; // no price, skip
+
+    // parse price as float (handle comma decimal if needed)
+    const price = parseFloat(String(priceRaw).replace(",", "."));
+    if (isNaN(price)) return false;
+
+    // Check min/max price filters
+    if (minPrice !== null && price < minPrice) return false;
+    if (maxPrice !== null && price > maxPrice) return false;
+
+    // Search field filtering (dynamic key)
+    const searchField = document.getElementById("search-field-select").value;
     const matchesSearch = terms.every(term =>
-      item.naziv.toLowerCase().includes(term)
+      item[searchField]?.toLowerCase().includes(term)
     );
 
-const matchesCategory =
-  selectedCategories.length === 0 || selectedCategories.some(cat => item.kategorije.startsWith(cat.slice(0, 2)));
-
+    const matchesCategory =
+      selectedCategories.length === 0 ||
+      selectedCategories.some(cat => item.kategorije.startsWith(cat.slice(0, 2)));
 
     const matchesStore =
       selectedStores.length === 0 || selectedStores.includes(item.trgovina);
 
-    const matchesAddress = !addressTerm || item.adresa.some(addr => addr.toLowerCase().includes(addressTerm));
+    const matchesAddress =
+      !addressTerm || item.adresa.some(addr => addr.toLowerCase().includes(addressTerm));
 
     return matchesSearch && matchesCategory && matchesStore && matchesAddress;
   });
-  
+
+  console.log(`${filtered.length} JE DULJINa`);
   renderItems(filtered);
 }
+document.getElementById("min-price").addEventListener("input", filterItems);
+document.getElementById("max-price").addEventListener("input", filterItems);
 
 
 
@@ -450,7 +495,10 @@ const matchesCategory =
     if (localStorage.getItem("dark-mode") === "enabled") {
       document.documentElement.classList.add("dark");
     }
-
+function parsePrice(str) {
+  if (!str) return -Infinity; // treat missing price as very low to push it first (or use Infinity to push last)
+  return parseFloat(str.replace(',', '.')) || -Infinity;
+}
     document.getElementById("sort-select").addEventListener("change", (e) => {
   const val = e.target.value;
   if (!val) return renderItems(items); // or filtered items
@@ -458,9 +506,9 @@ const matchesCategory =
   const sorted = [...items]; // or [...items] if no filter applied
 
   if (val === "price-asc") {
-    sorted.sort((a, b) => parseFloat(a.cijena_za_jedinicu_mjere) - parseFloat(b.cijena_za_jedinicu_mjere));
+    sorted.sort((a, b) => parsePrice(a.maloprodajna_cijena) - parsePrice(b.maloprodajna_cijena));
   } else if (val === "price-desc") {
-    sorted.sort((a, b) => parseFloat(b.cijena_za_jedinicu_mjere) - parseFloat(a.cijena_za_jedinicu_mjere));
+    sorted.sort((a, b) => parsePrice(b.maloprodajna_cijena) - parsePrice(a.maloprodajna_cijena));
   } else if (val === "name-asc") {
     sorted.sort((a, b) => a.naziv.localeCompare(b.naziv));
   } else if (val === "name-desc") {

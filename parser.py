@@ -293,6 +293,7 @@ def find(filters: dict, df):
     if len(returnal) > 1000: 
         print(filters,"je preee dugo, čak",len(returnal))
         return []
+    print("pronašao",len(returnal),"rezultata za",filters)
     return returnal if filtered.height > 0 else []
 from collections import defaultdict
 def find_all(filters: dict, df):

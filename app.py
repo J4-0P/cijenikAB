@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -29,7 +29,7 @@ async def root(request: Request):
 
 import asyncio
 @app.get("/search")
-async def search(request: Request, query: str = ""):
+async def search(request: Request, query: str = "", type: str = Query("naziv")):
     if not query:
         return JSONResponse(content={"error": "No query provided"}, status_code=400)
 
@@ -37,7 +37,7 @@ async def search(request: Request, query: str = ""):
         return JSONResponse(content={"error": "Query too short"}, status_code=400)
 
     filters = {
-        "naziv": {"contains": query.split(" ")}
+        type: {"contains": query.split(" ")}
     }
 
     loop = asyncio.get_event_loop()

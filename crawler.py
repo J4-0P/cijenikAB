@@ -10,10 +10,11 @@ import xml.etree.ElementTree as ET
 import urllib.parse
 import concurrent.futures
 import csv
-def crawlRibola(today=datetime.date.today()):
+from datetime import datetime, date
+def crawlRibola(dateToCrawl=date.today()):
     url = "https://ribola.hr/ribola-cjenici/?date=" #29.05.2025
 
-    date_str = today.strftime("%d.%m.%Y")
+    date_str = dateToCrawl.strftime("%d.%m.%Y")
     response = requests.get(url + date_str)
 
     data = []
@@ -96,11 +97,11 @@ def crawlRibola(today=datetime.date.today()):
     return data
 
 
-def crawlKonzum(today=datetime.date.today()):
+def crawlKonzum(dateToCrawl=date.today()):
     url = "https://www.konzum.hr/cjenici?date="
     #2025-05-29
     counter = 1
-    date_str = today.strftime("%Y-%m-%d")
+    date_str = dateToCrawl.strftime("%Y-%m-%d")
 
     response = requests.get(url + date_str+"&page=" + str(counter))
     print(f"Response status code: {response.status_code}")
@@ -138,6 +139,7 @@ def crawlKonzum(today=datetime.date.today()):
                 address = ",".join(parts[1:3]).strip()
             # Process each row in the CSV after the header
             for values in reader:
+                values = [thing.encode("latin-1").decode("utf-8") for thing in values]
                 # Map CSV columns by position if header is not reliable
                 # 0: NAZIV PROIZVODA, 1: ŠIFRA PROIZVODA, 2: MARKA PROIZVODA, 3: NETO KOLIČINA, 4: JEDINICA MJERE, 5: MALOPRODAJNA CIJENA, 6: CIJENA ZA JEDINICU MJERE, 7: MPC ZA VRIJEME POSEBNOG OBLIKA PRODAJE, 8: NAJNIŽA CIJENA U POSLJEDNIH 30 DANA, 9: SIDRENA CIJENA NA 2.5.2025, 10: BARKOD, 11: KATEGORIJA PROIZVODA
                 result.append({
@@ -172,14 +174,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime, date
+
 import time
 import requests
 import csv
 import io
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-def crawlSpar(today=date.today()):
+def crawlSpar(dateToCrawl=date.today()):
     data = []
     url = "https://www.spar.hr/datoteke_cjenici/index.html"
     options = Options()
@@ -190,7 +192,7 @@ def crawlSpar(today=date.today()):
     driver.get(url)
     wait.until(EC.presence_of_element_located((By.ID, "datePicker")))
 
-    date_str = today.strftime('%Y-%m-%d')
+    date_str = dateToCrawl.strftime('%Y-%m-%d')
     print(date_str)
 
     # Find date picker fresh
@@ -247,6 +249,7 @@ def crawlSpar(today=date.today()):
                     address = ",".join(parts[1:3]).strip()
 
                 for values in reader:
+                    values = [thing.encode("latin-1").decode("utf-8") for thing in values]
                     result.append({
                         "datum": date_str,
                         "naziv": values[0] if len(values) > 0 else "",
@@ -283,22 +286,71 @@ def crawlSpar(today=date.today()):
 
 #    return all_data
 #if __name__ == "__main__":
-    # todays = crawlSpar(today=datetime.strptime("29.5.2025", "%d.%m.%Y").date())
+    # dateToCrawls = crawlSpar(dateToCrawl=datetime.strptime("29.5.2025", "%d.%m.%Y").date())
     # yesterdays= crawlSpar()
-    # print(todays == yesterdays)
-#     today = datetime.today()
+    # print(dateToCrawls == yesterdays)
+#     dateToCrawl = datetime.dateToCrawl()
 #    # konzum_data = CrawlPlodine()
-#     name = "output/eurospin_" + today.strftime("%Y-%m-%d") + ".ndjson"
+#     name = "output/eurospin_" + dateToCrawl.strftime("%Y-%m-%d") + ".ndjson"
 #     with open(name, "w", encoding="utf-8") as f:
 #         for item in konzum_data:
 #             f.write(json.dumps(item, ensure_ascii=False) + "\n")
+from collections import defaultdict
+
+def group_addresses_from_file(input_filepath, output_filepath):
+    grouped = defaultdict(lambda: {
+        "datum": None,
+        "naziv": None,
+        "sifra": None,
+        "marka": None,
+        "neto_kolicina": None,
+        "jedinica_mjere": None,
+        "maloprodajna_cijena": None,
+        "cijena_za_jedinicu_mjere": None,
+        "maloprodajna_cijena_akcija": None,
+        "najniza_cijena": None,
+        "sidrena_cijena": None,
+        "barkod": None,
+        "kategorije": None,
+        "trgovina": None,
+        "adresa": []
+    })
+
+    with open(input_filepath, 'r', encoding='utf-8') as f:
+        i = 0
+        for line in f:
+            i+=1
+            if i%10000==0:
+                print(i)
+            item = json.loads(line)
+            key = (item["naziv"], item["trgovina"])
+            entry = grouped[key]
+            if entry["naziv"] is None:
+                for k in entry.keys():
+                    if k != "adresa":
+                        entry[k] = item.get(k)
+            if item["adresa"] not in entry["adresa"]:
+                entry["adresa"].append(item["adresa"])
+
+    # Write combined output as NDJSON
+    with open(output_filepath, 'w', encoding='utf-8') as out:
+        for record in grouped.values():
+            out.write(json.dumps(record, ensure_ascii=False) + '\n')
+
+
+def statisticsCrawl(dateToCrawl=date.today()):
+    """Crawls for select statistics, to base inflation on."""
+    
+
+
+
 if __name__ == "__main__":
-    today = date.today()
+    dateToCrawl = date.today()
     konzum = crawlKonzum()
     spar = crawlSpar()
     ribola = crawlRibola()
     combined = [*konzum, *spar, *ribola]
-    name = "output/combined_" + today.strftime("%Y-%m-%d") + ".ndjson"
+    name = "output/combined_" + dateToCrawl.strftime("%Y-%m-%d") + ".ndjson"
     with open(name, "w", encoding="utf-8") as f:
         for item in combined:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
