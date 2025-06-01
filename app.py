@@ -7,7 +7,7 @@ import parser
 import polars as pl # type:ignore
 from apscheduler.schedulers.background import BackgroundScheduler
 import crawler
-
+from datetime import timedelta
 import threading
 
 app = FastAPI()
@@ -27,6 +27,27 @@ def load_latest_df():
         print(f"Loaded dataframe for {today_str}")
     else:
         print(f"File {file_path} does not exist yet.")
+        # Only crawl if it's after 9 AM
+        now = datetime.now()
+        if now.hour >= 9:
+            crawler.collectioncrawl(date.today())
+            # then load
+            with df_lock:
+                df = pl.scan_ndjson(file_path)
+        else:
+            print("It's not after 9 AM yet. Skipping crawl and load.")
+            # Try to load yesterday's data if today's is not available
+            yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+            yesterday_file_path = f"output/grouped_{yesterday_str}.ndjson"
+            if Path(yesterday_file_path).exists():
+                with df_lock:
+                    df = pl.scan_ndjson(yesterday_file_path)
+                print(f"Loaded dataframe for {yesterday_str}")
+            else:
+                print(f"File {yesterday_file_path} does not exist either. Dataframe not loaded.")
+
+# Daily job to crawl and load the latest dataframe
+
 
 def daily_job():
     today = date.today()

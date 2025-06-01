@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>Search with Left Filters</title>
+   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <title>Brinu me cijene</title>
     <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -139,7 +139,7 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
         class="absolute top-4 right-4 block md:hidden text-2xl text-gray-600 dark:text-gray-300"
         aria-label="Zatvori filtere">&times;
       </button>
-      
+      <h1 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100 md:hidden">Brinu me cijene</h1>
       <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-200">Filteri</h2>
       <div class="space-y-3">
 
@@ -157,10 +157,22 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
 
           </button>
           <div id="store-filters" class="space-y-3 hidden">
-            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Konzum" class="store-filter mr-2"/>Konzum</label>
-            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Ribola" class="store-filter mr-2"/>Ribola</label>
-            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Spar" class="store-filter mr-2"/>Spar</label>
-            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Studenac" class="store-filter mr-2"/>Studenac</label>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="Konzum" class="store-filter mr-2" id="store-kon" />
+              <label for="store-kon" class="text-gray-900 dark:text-gray-200">Konzum</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="Ribola" class="store-filter mr-2" id="store-rib" />
+              <label for="store-rib" class="text-gray-900 dark:text-gray-200">Ribola</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="Spar" class="store-filter mr-2" id="store-spa" />
+              <label for="store-spa" class="text-gray-900 dark:text-gray-200">Spar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="Studenac" class="store-filter mr-2" id="store-stu" />
+              <label for="store-stu" class="text-gray-900 dark:text-gray-200">Studenac</label>
+            </div>
           </div>
         </div>
 
@@ -177,24 +189,30 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
             <span class="transition-transform duration-200" id="category-filters-arrow"  style="display:inline-block; transform: rotate(-90deg);">▼</span>
           </button>
           <div id="category-filters" class="space-y-3 hidden">
-            <label class="block text-gray-900 dark:text-gray-200">
-              <input type="checkbox" value="PROIZVODI ZA KUĆANSTVO" class="filter mr-2" /> Proizvodi za kućanstvo
-            </label>
-            <label class="block text-gray-900 dark:text-gray-200">
-              <input type="checkbox" value="SREDSTVA ZA ČIŠĆENJE" class="filter mr-2" /> Sredstva za čišćenje
-            </label>
-            <label class="block text-gray-900 dark:text-gray-200">
-              <input type="checkbox" value="HRANA" class="filter mr-2" /> Hrana
-            </label>
-            <label class="block text-gray-900 dark:text-gray-200">
-              <input type="checkbox" value="KOZMETIKA" class="filter mr-2" /> Kozmetika
-            </label>
-            <label class="block text-gray-900 dark:text-gray-200">
-              <input type="checkbox" value="PIĆE" class="filter mr-2" /> Piće
-            </label>
-            <label class="block text-gray-900 dark:text-gray-200">
-              <input type="checkbox" value="TOALETNE POTREPŠTINE" class="filter mr-2" /> Toaletne potrepštine
-            </label>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="PROIZVODI ZA KUĆANSTVO" class="filter mr-2" id="cat-kućanstvo" />
+              <label for="cat-kućanstvo" class="text-gray-900 dark:text-gray-200">Proizvodi za kućanstvo</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="SREDSTVA ZA ČIŠĆENJE" class="filter mr-2" id="cat-čišćenje" />
+              <label for="cat-čišćenje" class="text-gray-900 dark:text-gray-200">Sredstva za čišćenje</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="HRANA" class="filter mr-2" id="cat-hrana" />
+              <label for="cat-hrana" class="text-gray-900 dark:text-gray-200">Hrana</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="KOZMETIKA" class="filter mr-2" id="cat-kozmetika" />
+              <label for="cat-kozmetika" class="text-gray-900 dark:text-gray-200">Kozmetika</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="PIĆE" class="filter mr-2" id="cat-piće" />
+              <label for="cat-piće" class="text-gray-900 dark:text-gray-200">Piće</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="TOALETNE POTREPŠTINE" class="filter mr-2" id="cat-toaletne" />
+              <label for="cat-toaletne" class="text-gray-900 dark:text-gray-200">Toaletne potrepštine</label>
+            </div>
           </div>
         </div>
         <div class="mb-4">
@@ -265,8 +283,8 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
           aria-label="Sort items"
         >
           <option value="">Sortiraj</option>
-          <option value="price-desc">Cijena ↑</option>
-          <option value="price-asc">Cijena ↓</option>
+          <option value="price-desc">Cijena ↓</option>
+          <option value="price-asc">Cijena ↑</option>
           <option value="name-asc">Naziv A-Z</option>
           <option value="name-desc">Naziv Z-A</option>
         </select>
@@ -283,6 +301,11 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
       </section>
     </main>
   </div>
+
+  <!-- Loading Spinner -->
+<div id="loading-spinner" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 hidden">
+  <div class="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+</div>
 
   <button
     id="dark-mode-toggle"
@@ -369,10 +392,19 @@ document.querySelectorAll("#address-search").forEach(f =>
     searchInput.addEventListener("change", filterItems);
     filters.forEach(f => f.addEventListener("change", filterItems));
   const params = new URLSearchParams(window.location.search);
+        const typeParam = params.get('type');
+      if (typeParam === 'barcode') {
+        document.getElementById("search-field-select").value = "barkod";
+        console.log(parseInt(params.get('search'))%1000);
+        const searchStr = params.get('search') || '';
+        const last4 = searchStr.slice(-4);
+        document.title = "Rezultati za barkod ..." + last4;
+      }
   const searchQuery = params.get('search');
-  if (searchQuery) {
+  if (searchQuery && typeParam != 'barcode') {
     const input = document.getElementById('search');
     const button = document.getElementById('search-button');
+    document.title = "Rezultati za " + searchQuery;
     input.value = searchQuery;
     button.click(); // or call your search function directly
   }
@@ -409,6 +441,9 @@ input.addEventListener("keydown", (e) => {
     const query = document.getElementById('search').value.trim();
     if (!query) return;
 
+    // Show spinner
+    document.getElementById('loading-spinner').classList.remove('hidden');
+
     try {
       
   // Returns true if at least one string length >= 3,
@@ -421,6 +456,8 @@ if (queryParts.every(s => s.length < 3)) {
 }
 
       const response = await fetch(`search?query=${encodeURIComponent(query)}&type=${document.getElementById("search-field-select").value}`);
+      window.history.replaceState({}, '', `?query=${encodeURIComponent(query)}&type=${document.getElementById("search-field-select").value}`);
+      itemsContainer.innerHTML = "";
       if (!response.ok) throw new Error('Network error');
 
       resultsDicts = await response.json();
@@ -433,9 +470,11 @@ if (queryParts.every(s => s.length < 3)) {
         itemsContainer.appendChild(createResultElement(item));
       });
       filterItems();
-      // You can now use resultsDicts anywhere in this script scope
     } catch (error) {
       console.error('Failed to fetch search results:', error);
+    } finally {
+      // Hide spinner
+      document.getElementById('loading-spinner').classList.add('hidden');
     }
   });
     const itemsContainer = document.getElementById("items");
@@ -445,15 +484,19 @@ function createResultElement(item) {
   addressFilter = document.getElementById("address-search").value;
   const div = document.createElement("div");
   div.className = "border border-gray-200 rounded p-4 shadow-sm hover:shadow-md transition";
-cijena = item.maloprodajna_cijena;
-if (cijena <= 0 || cijena == "" ){
+let cijena = parseFloat(item.maloprodajna_cijena);
+if (isNaN(cijena) || cijena <= 0) {
   cijena = "?";
+} else {
+  cijena = cijena.toFixed(2);
 }
-  let thing = "€" + cijena + "/kom";
-  
-  if (item.jedinica_mjere.toUpperCase() != "KOM") {
-    thing = "€" + item.maloprodajna_cijena + "/kom <small>(€" + item.cijena_za_jedinicu_mjere + "/"+item.jedinica_mjere+")</small>";
-  }
+let thing = "€" + cijena + "/kom";
+
+if (item.jedinica_mjere.toUpperCase() != "KOM") {
+  let cijenaMjere = parseFloat(item.cijena_za_jedinicu_mjere);
+  cijenaMjere = isNaN(cijenaMjere) ? "?" : cijenaMjere.toFixed(2);
+  thing = "€" + (isNaN(parseFloat(item.maloprodajna_cijena)) ? "?" : parseFloat(item.maloprodajna_cijena).toFixed(2)) + "/kom <br><small>(€" + cijenaMjere + "/" + item.jedinica_mjere + ")</small>";
+}
 
 
 
@@ -472,26 +515,26 @@ if (cijena <= 0 || cijena == "" ){
 
    const num = filteredAddresses.length;
   let somevar;
-  if (num > 1) {
+
+
     const lastDigit = num % 10;
     const lastTwoDigits = num % 100;
-
-    if (lastDigit === 1 && lastTwoDigits !== 11) {
+    if (num === 1) {
+      somevar = "Na jednoj adresi";
+    } else if (lastDigit === 1 && lastTwoDigits !== 11) {
       somevar = `Na ${num} adresu`;
     } else if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwoDigits >= 12 && lastTwoDigits <= 14)) {
       somevar = `Na ${num} adrese`;
     } else {
       somevar = `Na ${num} adresa`;
     }
-  } else {
-    somevar = item.adresa[0];
-  }
+
   div.innerHTML = `
 <div class="flex justify-between items-start mb-2 ">
   <h3 class="font-semibold text-lg leading-none">${item.naziv}</h3>
   <div class="flex flex-col items-end">
     <div class="text-green-700 font-bold text-lg">${thing}</div>
-    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">${item.barkod}</div>
+    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1 ">${item.barkod}</div>
   </div>
 </div>
 
@@ -505,15 +548,19 @@ if (cijena <= 0 || cijena == "" ){
 <div class="flex space-x-2">
   <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">${mapCategory(item.kategorije)}</span>
   <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">${item.trgovina}</span>
+
+  
 </div>
 `;
 
   const button = div.querySelector('.toggle-dropdown');
   const dropdown = div.querySelector('.dropdown-content');
 
-  button.addEventListener('click', () => {
-    dropdown.classList.toggle('hidden');
-  });
+
+    button.addEventListener('click', () => {
+      dropdown.classList.toggle('hidden');
+    });
+
 
   return div;
 }
@@ -522,7 +569,11 @@ if (cijena <= 0 || cijena == "" ){
     function renderItems(filteredItems) {
       itemsContainer.innerHTML = "";
       if (filteredItems.length === 0) {
-        itemsContainer.innerHTML = "<p class='text-gray-500 dark:text-gray-400'>Nema rezultata. Probajte tražiti ponovno.</p>";
+        if (!document.getElementById('loading-spinner').classList.contains('hidden')) {
+          // Don't show "no results" while loading
+          return;
+        }
+        itemsContainer.innerHTML = "<p class='text-gray-500 dark:text-gray-400'>Nema rezultata. Probajte tražiti ponovno ili promijeniti filtere.</p>";
         return;
       }
       filteredItems.forEach(item => {
@@ -533,49 +584,12 @@ if (cijena <= 0 || cijena == "" ){
       });
     }
 
-// function filterItems() {
-//   console.log("SAAAD RADIM NEŠTO")
-//   const searchTerm = searchInput.value.toLowerCase().trim();
-//   const terms = searchTerm.split(/\s+/);
-
-//   const selectedCategories = Array.from(document.querySelectorAll(".category-filter"))
-//     .filter(cb => cb.checked)
-//     .map(cb => cb.value);
-
-
-
-//   const selectedAddresses = Array.from(document.querySelectorAll(".address-filter"))
-//     .filter(cb => cb.checked)
-//     .map(cb => cb.value);
-
-//   const filtered = items.filter(item => {
-//     const matchesSearch = terms.every(term =>
-//       item.naziv.toLowerCase().includes(term)
-//     );
-
-//     const matchesCategory =
-//       selectedCategories.length === 0 ||
-//       selectedCategories.some(cat => item.kategorije.includes(cat));
-
-
-
-//     const matchesAddress =
-//       selectedAddresses.length === 0 ||
-//       selectedAddresses.some(addr => item.adresa.toLowerCase().includes(addr.toLowerCase()));
-
-//     return matchesSearch && matchesCategory && matchesStore && matchesAddress;
-//   });
-
-
-
-//   renderItems(filtered);
-// }
 
 function filterItems() {
   console.log("FILTRIRAM");
   const searchTerm = searchInput.value.toLowerCase().trim();
   const terms = searchTerm.split(/\s+/); // split by any whitespace
-
+  document.querySelector("h2").textContent = "Filteri za: " + terms.join(", ");
   const selectedCategories = Array.from(document.querySelectorAll(".filter"))
     .filter(f => f.checked)
     .map(f => f.value);
@@ -586,7 +600,10 @@ function filterItems() {
 
   // Get address filter value
   const addressTerm = document.getElementById("address-search").value.toLowerCase().trim();
-
+  const counts = {
+    STORES: {},
+    CATEGORIES: {}
+  };
   // Get min and max price inputs as numbers or null if empty/invalid
   const minPriceInput = document.getElementById("min-price").value;
   const maxPriceInput = document.getElementById("max-price").value;
@@ -622,10 +639,46 @@ function filterItems() {
     const matchesAddress =
       !addressTerm || item.adresa.some(addr => addr.toLowerCase().includes(addressTerm));
 
-    return matchesSearch && matchesCategory && matchesStore && matchesAddress;
-  });
+      // Count stores
+      // Only count for items that pass all filters (i.e., currently displayed)
+      // (moved counting after filtering)
+      return matchesSearch && matchesCategory && matchesStore && matchesAddress;
+      });
 
-  const counts = {};
+      // Count stores and categories in the filtered results
+      filtered.forEach(item => {
+      if (item.trgovina) {
+        counts.STORES[item.trgovina] = (counts.STORES[item.trgovina] || 0) + 1;
+      }
+      if (item.kategorije && typeof item.kategorije === "string") {
+        const catKey = item.kategorije.slice(0, 2).toUpperCase();
+        counts.CATEGORIES[catKey] = (counts.CATEGORIES[catKey] || 0) + 1;
+      }
+      });
+      
+
+console.log("Counts:", counts);
+document.querySelectorAll(".store-filter").forEach(cb => {
+  const label = document.querySelector(`label[for="${cb.id}"]`);
+  if (label) {
+    console.log("Setting label for", cb.id, "to", cb.value);
+    const count = counts.STORES[cb.value] || 0;
+    label.innerHTML = `${cb.value} <span class="text-xs text-gray-500 dark:text-gray-400">(${count})</span>`;
+  }
+});
+document.querySelectorAll(".filter").forEach(cb => {
+  const label = document.querySelector(`label[for="${cb.id}"]`);
+  if (label) {
+    console.log("Setting label for", cb.id, "to", cb.value);
+    // Use first two letters to match counts.CATEGORIES
+    const catKey = cb.value.slice(0, 2).toUpperCase();
+    const count = counts.CATEGORIES[catKey] || 0;
+    label.innerHTML = `${label.textContent.replace(/\s*\(\d+\)$/, '')} <span class="text-xs text-gray-500 dark:text-gray-400">(${count})</span>`;
+  }
+});
+
+  // Update category and store counts in the UI
+  
 
   // Count all keys 'kategorija' and 'trgovina'
 

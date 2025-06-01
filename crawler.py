@@ -196,6 +196,8 @@ def crawlSpar(dateToCrawl=date.today()):
         res.raise_for_status()
         dataaa = res.json()
         links = [file['URL'] for file in dataaa.get('files', [])]
+        titles = [file['name'] for file in dataaa.get('files', [])]
+        dictoflinks = dict(zip(titles, links))
     except Exception as e:
         print("Spar neuspješan",e)
     # Extract hrefs
@@ -228,12 +230,20 @@ def crawlSpar(dateToCrawl=date.today()):
                 header = next(reader)
                 parsed = urllib.parse.urlparse(link)
                 qs = urllib.parse.parse_qs(parsed.query)
-                title = qs.get("title", [""])[0]
+                # Find the dict in dataaa['files'] that matches this link to get the title
+                title = next((t for t, l in dictoflinks.items() if l == link), "")
+                if not title:
+                    print(f"Title not found for link: {link}")
+                    
 
-                parts = title.split(",")
-                address = ""
-                if len(parts) >= 3:
-                    address = ",".join(parts[1:3]).strip()
+                #example title is hipermarket_zadar_bleiburskih_zrtava_18_8701_interspar_zadar_0031_20250601_0330.csv
+                #the address will be everythin before the last two underscores
+                # Split title by underscores to extract address
+
+                parts = title.split("_")
+
+
+                address = " ".join(parts[:-3])  # All parts except the last two joined by space
 
                 for values in reader:
                     
@@ -261,7 +271,7 @@ def crawlSpar(dateToCrawl=date.today()):
 
     max_workers = min(32, (os.cpu_count() or 1) * 5)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        results = list(executor.map(process_link, links))
+        results = list(executor.map(process_link, dictoflinks.values()))
     for r in results:
         if r is not None:
             data.extend(r)

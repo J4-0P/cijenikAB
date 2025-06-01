@@ -2,8 +2,11 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <title>Search with Left Filters</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <title>Brinu me cijene</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class'
@@ -29,17 +32,15 @@
 
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-8">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-start justify-center  md:items-center md:p-8">
+<div class="flex items-center justify-center p-2 md:p-8 flex-col justify-start">
+  <div class="mb-[0px] md:mb-[24px]">
 
-  <div class="fixed top-24 mb-[40px]">
-    <h1 class="text-5xl font-bold mb-2 text-gray-900 dark:text-gray-100" style="cursor:pointer;" onclick="location.href='/'">
-      Brinu me cijene
-    </h1>
+    <h1 class="text-[46px] font-bold mb-2 text-gray-900  md:text-[48px] md:mt-32" style="cursor:pointer;" onclick="location.href='/'">Brinu me cijene</h1>
   </div>
 
   <main
-    class="fixed top-48 max-h-[80vh] overflow-auto max-w-5xl w-full box-border bg-white dark:bg-gray-800 rounded shadow-md p-6 border border-gray-300 dark:border-gray-700"
-  >
+    class="max-h-[80vh] overflow-auto max-w-5xl w-full box-border bg-white dark:bg-gray-800 rounded shadow-md p-6 border border-gray-300 dark:border-gray-700 space-y-4">
     <article class="flex flex-col gap-6 text-gray-900 dark:text-gray-200">
       
       <h2 class="text-3xl font-semibold">Što je ovo?</h2>
@@ -68,7 +69,7 @@
       
     </article>
   </main>
-  <button class="box-border bg-white dark:bg-gray-800 rounded shadow-md p-2" onclick="location.href='/'">Nazad</button>
-
+  <button class="box-border bg-white dark:bg-gray-800 rounded shadow-md p-2 space-y-4 gap m-4" onclick="location.href='/'">Nazad</button>
+</div>
 </body>
 </html>
