@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <title>Search with Left Filters</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <style>
+    .collapse-content {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+    .hidden + button span,
+    #category.hidden + button span {
+      transform: rotate(-90deg);
+    }
+    .collapse-content.open {
+      max-height: 500px; /* large enough for content */
+      opacity: 1;
+    }
+
+
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-8">
+
+  <div class="fixed top-24 mb-[40px]">
+    <h1 class="text-5xl font-bold mb-2 text-gray-900 dark:text-gray-100" style="cursor:pointer;" onclick="location.href='/'">
+      Brinu me cijene
+    </h1>
+  </div>
+
+  <main
+    class="fixed top-48 max-h-[80vh] overflow-auto max-w-5xl w-full box-border bg-white dark:bg-gray-800 rounded shadow-md p-6 border border-gray-300 dark:border-gray-700"
+  >
+    <article class="flex flex-col gap-6 text-gray-900 dark:text-gray-200">
+      
+      <h2 class="text-3xl font-semibold">Što je ovo?</h2>
+      <p>
+        Stranica na kojoj možete naći cijene maloprodajnih trgovina poput Konzuma, Spara i Ribole.
+    
+      <br>
+        Cijene su promijenjene svaki dan u 9 ujutro.
+        </p>
+      
+      <h3 class="text-2xl font-semibold">Kako je ovo moguće? Zašto ovoga nije prije bilo?</h3>
+      <p>
+        Uoči <a class="text-blue-600" href="https://www.zakon.hr/c/podzakonski-propis/540799/nn-75-2025-%282.5.2025.%29%2C-
+        odluka-o-objavi-cjenika-i-isticanju-dodatne-cijene-kao-mjera-izravne-kontrole-cijena-u-trgovini-na">
+        novog zakona NN 75/2025 (2.5.2025.)</a>, 
+        sve maloprodajne trgovine dužne su izdavati cjenike u digitalnom obliku, pogodne za automatsku obradu.
+        <br>
+        Mi (uz još neke stranice) obavljamo tu automatsku obradu u Vašu korist!
+      </p>
+      
+
+      <h3 class="text-2xl font-semibold">Kako ste ovo napravili?</h3>
+      <p>
+        Pristup izvornom kodu imate <a class="text-blue-600" href="https://github.com/J4-0P/cijenikAB">ovdje</a>.
+      </p>
+      
+    </article>
+  </main>
+  <button class="box-border bg-white dark:bg-gray-800 rounded shadow-md p-2" onclick="location.href='/'">Nazad</button>
+
+</body>
+</html>

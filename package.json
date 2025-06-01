@@ -1,0 +1,25 @@
+{
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^4.1.8"
+  },
+  "name": "src",
+  "version": "1.0.0",
+  "description": "Uoči novog zakona [NN 75/2025 (2.5.2025.) (Odluka o objavi cjenika i isticanju dodatne cijene kao mjera izravne kontrole cijena u trgovini na malo)](https://www.zakon.hr/c/podzakonski-propis/540799/nn-75-2025-%282.5.2025.%29%2C-odluka-o-objavi-cjenika-i-isticanju-dodatne-cijene-kao-mjera-izravne-kontrole-cijena-u-trgovini-na), većina ako ne sve maloprodajne trgovine izdavaju \r > cjenike u digitalnom obliku, pogodne za automatsku obradu",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/J4-0P/cijenikAB.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/J4-0P/cijenikAB/issues"
+  },
+  "homepage": "https://github.com/J4-0P/cijenikAB#readme"
+}

@@ -290,7 +290,7 @@ def find(filters: dict, df):
     
     filtered = df.filter(mask).collect()
     returnal = filtered.to_dicts()
-    if len(returnal) > 1000: 
+    if len(returnal) > 10000: 
         print(filters,"je preee dugo, čak",len(returnal))
         return []
     print("pronašao",len(returnal),"rezultata za",filters)

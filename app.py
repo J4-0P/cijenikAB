@@ -27,17 +27,21 @@ async def root(request: Request):
     content = html_path.read_text(encoding="utf-8")
     return HTMLResponse(content=content)
 
+@app.get("/about")
+async def about(request: Request):
+    return HTMLResponse(content=Path("static/about.html").read_text(encoding="utf-8"))
+
 import asyncio
 @app.get("/search")
 async def search(request: Request, query: str = "", type: str = Query("naziv")):
     if not query:
         return JSONResponse(content={"error": "No query provided"}, status_code=400)
 
-    if not any(len(part) >= 3 for part in query.split()):
+    filtered_parts = [part for part in query.split() if len(part) >= 3]
+    if not filtered_parts:
         return JSONResponse(content={"error": "Query too short"}, status_code=400)
-
     filters = {
-        type: {"contains": query.split(" ")}
+        type: {"contains": filtered_parts}
     }
 
     loop = asyncio.get_event_loop()

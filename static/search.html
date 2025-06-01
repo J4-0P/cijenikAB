@@ -29,20 +29,52 @@
 
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-8">
-  
-<div class="fixed top-24 mb-[40px]">
-  <h1 class="text-5xl font-bold mb-2 text-gray-900" style="cursor:pointer;" onclick="location.href='/'">Brinu me cijene</h1>
- 
 
-</div>
-<div
-  class="fixed top-48 max-h-[80vh] overflow-auto max-w-5xl w-full box-border bg-white dark:bg-gray-800 rounded shadow-md p-6 flex gap-8 border border-gray-300 dark:border-gray-700 h-[80vh] maindiv"
->
-    <!-- Filters Sidebar (left) -->
-    <aside class="w-64 flex-shrink-0">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-0 md:p-8">
+
+  <!-- DESKTOP TITLE -->
+  <div class="hidden md:fixed md:top-24 md:mb-[40px] md:block">
+    <h1 class="text-5xl font-bold mb-2 text-gray-900 dark:text-gray-100"
+        style="cursor:pointer;" onclick="location.href='/'">Brinu me cijene</h1>
+  </div>
+
+  <!-- MOBILE: Filters button fixed top -->
+  <button id="mobile-filters-toggle"
+    class="block md:hidden fixed top-4 left-4 z-30 bg-gray-800 text-white px-4 py-2 rounded shadow"
+    aria-label="Filteri">
+    Filteri
+  </button>
+
+  <!-- MOBILE: Overlay when sidebar open -->
+  <div id="overlay"
+    class="fixed inset-0 bg-black/60 z-20 transition-opacity duration-300 opacity-0 pointer-events-none md:hidden"></div>
+
+  <!-- Main app/maindiv -->
+  <div
+    class="fixed top-0 left-0 md:top-48 md:left-1/2 md:-translate-x-1/2
+      w-full h-screen md:w-full md:max-w-5xl md:h-[80vh]
+      box-border bg-white dark:bg-gray-800 rounded-none md:rounded shadow-md p-4 md:p-6 flex flex-col md:flex-row gap-0 md:gap-8 border-0 md:border border-gray-300 dark:border-gray-700 z-10 maindiv"
+    >
+
+    <!-- ASIDE: Sidebar -->
+    <aside
+      id="sidebar"
+      class="
+        fixed top-0 left-0 h-full z-30 w-72 max-w-full bg-white dark:bg-gray-800 shadow-lg p-6 transition-transform duration-300
+        transform -translate-x-full
+        md:static md:w-64 md:flex-shrink-0 md:h-auto md:translate-x-0 md:bg-transparent md:shadow-none md:p-0
+      ">
+
+      <!-- Close button on mobile -->
+      <button id="sidebar-close"
+        class="absolute top-4 right-4 block md:hidden text-2xl text-gray-600 dark:text-gray-300"
+        aria-label="Zatvori filtere">&times;
+      </button>
+      
       <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-200">Filters</h2>
       <div class="space-y-3">
+
+        <!-- STORE FILTERS ACCORDION -->
         <div>
           <button
             type="button"
@@ -52,15 +84,16 @@
             id="store-filters-toggle"
           >
             Trgovina
-            <span id="arrow" class="transition-transform duration-200 rotate-[-90deg]">▼</span>
+            <span class="transition-transform duration-200" id="store-filters-arrow">▼</span>
           </button>
           <div id="store-filters" class="space-y-3 hidden">
             <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Konzum" class="store-filter mr-2"/>Konzum</label>
             <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Ribola" class="store-filter mr-2"/>Ribola</label>
             <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Spar" class="store-filter mr-2"/>Spar</label>
-          
           </div>
         </div>
+
+        <!-- CATEGORY FILTERS ACCORDION -->
         <div>
           <button
             type="button"
@@ -70,28 +103,27 @@
             id="category-filters-toggle"
           >
             Kategorija
-            <span id="arrow" class="transition-transform duration-200 rotate-[-90deg]">▼</span>
+            <span class="transition-transform duration-200" id="category-filters-arrow">▼</span>
           </button>
           <div id="category-filters" class="space-y-3 hidden">
-<label class="block text-gray-900 dark:text-gray-200">
-  <input type="checkbox" value="PROIZVODI ZA KUĆANSTVO" class="filter mr-2" /> Proizvodi za kućanstvo
-</label>
-<label class="block text-gray-900 dark:text-gray-200">
-  <input type="checkbox" value="SREDSTVA ZA ČIŠĆENJE" class="filter mr-2" /> Sredstva za čišćenje
-</label>
-<label class="block text-gray-900 dark:text-gray-200">
-  <input type="checkbox" value="HRANA" class="filter mr-2" /> Hrana
-</label>
-<label class="block text-gray-900 dark:text-gray-200">
-  <input type="checkbox" value="KOZMETIKA" class="filter mr-2" /> Kozmetika
-</label>
-<label class="block text-gray-900 dark:text-gray-200">
-  <input type="checkbox" value="PIĆE" class="filter mr-2" /> Piće
-</label>
-<label class="block text-gray-900 dark:text-gray-200">
-  <input type="checkbox" value="TOALETNE POTREPŠTINE" class="filter mr-2" /> Toaletne potrepštine
-</label>
-
+            <label class="block text-gray-900 dark:text-gray-200">
+              <input type="checkbox" value="PROIZVODI ZA KUĆANSTVO" class="filter mr-2" /> Proizvodi za kućanstvo
+            </label>
+            <label class="block text-gray-900 dark:text-gray-200">
+              <input type="checkbox" value="SREDSTVA ZA ČIŠĆENJE" class="filter mr-2" /> Sredstva za čišćenje
+            </label>
+            <label class="block text-gray-900 dark:text-gray-200">
+              <input type="checkbox" value="HRANA" class="filter mr-2" /> Hrana
+            </label>
+            <label class="block text-gray-900 dark:text-gray-200">
+              <input type="checkbox" value="KOZMETIKA" class="filter mr-2" /> Kozmetika
+            </label>
+            <label class="block text-gray-900 dark:text-gray-200">
+              <input type="checkbox" value="PIĆE" class="filter mr-2" /> Piće
+            </label>
+            <label class="block text-gray-900 dark:text-gray-200">
+              <input type="checkbox" value="TOALETNE POTREPŠTINE" class="filter mr-2" /> Toaletne potrepštine
+            </label>
           </div>
         </div>
         <div class="mb-4">
@@ -103,74 +135,72 @@
             placeholder="Upiši adresu..."
           />
         </div>
-      
-      <div class="mb-4">
-  <label class="font-semibold mb-2 block text-gray-900 dark:text-gray-200">Cijena (€)</label>
-  <div class="flex space-x-2">
-    <input
-      type="number"
-      id="min-price"
-      class="w-1/2 border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-      placeholder="Min"
-      min="0"
-      step="0.01"
-    />
-    <input
-      type="number"
-      id="max-price"
-      class="w-1/2 border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-      placeholder="Max"
-      min="0"
-      step="0.01"
-    />
-  </div>
-</div>
-</div>
+        <div class="mb-4">
+          <label class="font-semibold mb-2 block text-gray-900 dark:text-gray-200">Cijena (€)</label>
+          <div class="flex space-x-2">
+            <input
+              type="number"
+              id="min-price"
+              class="w-1/2 border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+              placeholder="Min"
+              min="0"
+              step="0.01"
+            />
+            <input
+              type="number"
+              id="max-price"
+              class="w-1/2 border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+              placeholder="Max"
+              min="0"
+              step="0.01"
+            />
+          </div>
+        </div>
+      </div>
     </aside>
 
-    <!-- Main content -->
-    <main class="flex-1 flex flex-col">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col mt-4 md:mt-0">
 
+      <!-- Search bar -->
+      <div class="flex mb-6 gap-2 items-center">
+        <div class="relative flex-1">
+          <input
+            id="search"
+            type="text"
+            placeholder="Search items..."
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-full p-3 pr-12 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          />
+          <button
+            id="search-button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition"
+            aria-label="Search"
+          >
+            &rarr;
+          </button>
+        </div>
 
-  <!-- Search bar -->
-  <div class="flex mb-6 gap-2 items-center">
-    <div class="relative flex-1">
-      <input
-        id="search"
-        type="text"
-        placeholder="Search items..."
-        class="w-full border border-gray-300 dark:border-gray-600 rounded-full p-3 pr-12 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-      />
-      <button
-        id="search-button"
-        class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition"
-        aria-label="Search"
-      >
-        &rarr;
-      </button>
-    </div>
+        <select
+          id="search-field-select"
+          class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          aria-label="Search by field"
+        >
+          <option value="naziv">Naziv</option>
+          <option value="barkod">Barkod</option>
+        </select>
 
-    <select
-      id="search-field-select"
-      class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-      aria-label="Search by field"
-    >
-      <option value="naziv">Naziv</option>
-      <option value="barkod">Barkod</option>
-    </select>
-
-    <select
-      id="sort-select"
-      class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-      aria-label="Sort items"
-    >
-      <option value="">Sort by</option>
-        <option value="price-desc">Price ↑</option>
-      <option value="price-asc">Price ↓</option>
-      <option value="name-asc">Name A-Z</option>
-      <option value="name-desc">Name Z-A</option>
-    </select>
-  </div>
+        <select
+          id="sort-select"
+          class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          aria-label="Sort items"
+        >
+          <option value="">Sort by</option>
+          <option value="price-desc">Price ↑</option>
+          <option value="price-asc">Price ↓</option>
+          <option value="name-asc">Name A-Z</option>
+          <option value="name-desc">Name Z-A</option>
+        </select>
+      </div>
 
       <!-- Search results -->
       <section id="items" class="space-y-4  overflow-auto  text-gray-900 dark:text-gray-200">
@@ -186,6 +216,70 @@
   >
     🌓
   </button>
+
+  <script>
+    // MOBILE SIDEBAR TOGGLE LOGIC
+    const toggleBtn = document.getElementById('mobile-filters-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('sidebar-close');
+    function openSidebar() {
+      sidebar.classList.remove('-translate-x-full');
+      sidebar.classList.add('translate-x-0');
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+      overlay.classList.add('opacity-100', 'pointer-events-auto');
+      document.body.classList.add('overflow-hidden');
+    }
+    function closeSidebar() {
+      sidebar.classList.remove('translate-x-0');
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.remove('opacity-100', 'pointer-events-auto');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
+      document.body.classList.remove('overflow-hidden');
+    }
+    // Hide sidebar if resizing
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 640) closeSidebar();
+    });
+
+    if(toggleBtn) toggleBtn.onclick = openSidebar;
+    if(closeBtn) closeBtn.onclick = closeSidebar;
+    if(overlay) overlay.onclick = closeSidebar;
+    // Hide sidebar by default on mobile
+    closeSidebar(); // for initial load
+
+    // ACCORDION LOGIC
+    function accordionToggle(btnId, contentId, arrowId) {
+      const btn = document.getElementById(btnId);
+      const content = document.getElementById(contentId);
+      const arrow = document.getElementById(arrowId);
+      btn.addEventListener('click', function(){
+        const expanded = content.classList.contains('hidden');
+        // collapse both if open at start
+        document.getElementById('store-filters').classList.add('hidden');
+        document.getElementById('category-filters').classList.add('hidden');
+        document.getElementById('store-filters-arrow').classList.remove('rotate-0');
+        document.getElementById('store-filters-arrow').classList.add('-rotate-90');
+        document.getElementById('category-filters-arrow').classList.remove('rotate-0');
+        document.getElementById('category-filters-arrow').classList.add('-rotate-90');
+        if (expanded) {
+          content.classList.remove('hidden');
+          arrow.classList.add('rotate-0');
+          arrow.classList.remove('-rotate-90');
+        }
+      });
+    }
+    // Set up arrows initial state and event listeners
+    document.getElementById('store-filters-arrow').classList.add('-rotate-90');
+    document.getElementById('category-filters-arrow').classList.add('-rotate-90');
+    accordionToggle('store-filters-toggle', 'store-filters', 'store-filters-arrow');
+    accordionToggle('category-filters-toggle', 'category-filters', 'category-filters-arrow');
+
+
+
+  </script>
+</body>
+</html>
 
   <script>
 function mapCategory(str) {
