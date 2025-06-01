@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+polars
+apscheduler
+requests
+bs4
+libarchive-c
+concurrent-log-handler

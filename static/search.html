@@ -2,6 +2,8 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>Search with Left Filters</title>
     <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -11,6 +13,46 @@
   </script>
 
   <style>
+    input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  background: #f3f4f6; /* light mode */
+  color: #374151;
+}
+
+.dark input[type="number"]::-webkit-inner-spin-button,
+.dark input[type="number"]::-webkit-outer-spin-button {
+  background: #374151; /* dark mode */
+  color: #d1d5db;
+}
+    ::-webkit-scrollbar {
+  width: 12px;
+  background: #f3f4f6; /* Tailwind gray-100 */
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* Tailwind gray-300 */
+  border-radius: 6px;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar {
+  background: #1f2937; /* Tailwind gray-800 */
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151; /* Tailwind gray-700 */
+}
+html {
+  scrollbar-color: #d1d5db #f3f4f6; /* thumb, track */
+}
+.dark {
+  scrollbar-color: #374151 #1f2937;
+}
+input[type="number"] {
+  color-scheme: light;
+}
+/* Dark mode */
+.dark input[type="number"] {
+  color-scheme: dark;
+}
     .collapse-content {
       max-height: 0;
       overflow: hidden;
@@ -29,7 +71,36 @@
 
   </style>
 </head>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  function categorytoggle() {
+  const btn = document.getElementById('category-filters-toggle');
+  const dropdown = document.getElementById('category-filters');
+  const arrow = document.getElementById('category-filters-arrow');
+  if (!btn || !dropdown || !arrow) return;
 
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', !expanded);
+  dropdown.classList.toggle('hidden');
+  arrow.style.transform = expanded ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+
+});
+function storetoggle(){
+  const btn = document.getElementById('store-filters-toggle');
+  const dropdown = document.getElementById('store-filters');
+  const arrow = document.getElementById('store-filters-arrow');
+  if (!btn || !dropdown || !arrow) return;
+
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', !expanded);
+  dropdown.classList.toggle('hidden');
+  arrow.style.transform = expanded ? 'rotate(0deg)' : 'rotate(180deg)';
+        document.getElementById('category-filters-toggle').addEventListener('click', categorytoggle);
+document.getElementById('store-filters-toggle').addEventListener('click', storetoggle);
+};
+</script>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-0 md:p-8">
 
   <!-- DESKTOP TITLE -->
@@ -39,30 +110,28 @@
   </div>
 
   <!-- MOBILE: Filters button fixed top -->
-  <button id="mobile-filters-toggle"
-    class="block md:hidden fixed top-4 left-4 z-30 bg-gray-800 text-white px-4 py-2 rounded shadow"
-    aria-label="Filteri">
-    Filteri
-  </button>
+
 
   <!-- MOBILE: Overlay when sidebar open -->
-  <div id="overlay"
-    class="fixed inset-0 bg-black/60 z-20 transition-opacity duration-300 opacity-0 pointer-events-none md:hidden"></div>
+
 
   <!-- Main app/maindiv -->
   <div
     class="fixed top-0 left-0 md:top-48 md:left-1/2 md:-translate-x-1/2
       w-full h-screen md:w-full md:max-w-5xl md:h-[80vh]
-      box-border bg-white dark:bg-gray-800 rounded-none md:rounded shadow-md p-4 md:p-6 flex flex-col md:flex-row gap-0 md:gap-8 border-0 md:border border-gray-300 dark:border-gray-700 z-10 maindiv"
+      box-border bg-white dark:bg-gray-800 rounded-none md:rounded shadow-md p-4 md:p-6 flex flex-col md:flex-row gap-0 md:gap-8 border-0 md:border border-gray-300 dark:border-gray-700  maindiv
+      "
     >
-
+  <div id="overlay"
+    class="fixed inset-0 bg-black/60 transition-opacity duration-300 opacity-0 pointer-events-none md:hidden" style="z-index: 35;"></div>
     <!-- ASIDE: Sidebar -->
     <aside
       id="sidebar"
       class="
-        fixed top-0 left-0 h-full z-30 w-72 max-w-full bg-white dark:bg-gray-800 shadow-lg p-6 transition-transform duration-300
+
+        fixed top-0 left-0 h-full w-72 max-w-full z-50 bg-white dark:bg-gray-800 shadow-lg p-6 transition-transform duration-300
         transform -translate-x-full
-        md:static md:w-64 md:flex-shrink-0 md:h-auto md:translate-x-0 md:bg-transparent md:shadow-none md:p-0
+        md:static md:w-64 md:flex-shrink-0 md:h-auto md:translate-x-0 md:bg-transparent md:shadow-none md:p-0 md:sticky
       ">
 
       <!-- Close button on mobile -->
@@ -71,7 +140,7 @@
         aria-label="Zatvori filtere">&times;
       </button>
       
-      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-200">Filters</h2>
+      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-200">Filteri</h2>
       <div class="space-y-3">
 
         <!-- STORE FILTERS ACCORDION -->
@@ -84,12 +153,14 @@
             id="store-filters-toggle"
           >
             Trgovina
-            <span class="transition-transform duration-200" id="store-filters-arrow">▼</span>
+            <span class="transition-transform duration-200" id="store-filters-arrow" style="display:inline-block; transform: rotate(-90deg);">▼</span>
+
           </button>
           <div id="store-filters" class="space-y-3 hidden">
             <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Konzum" class="store-filter mr-2"/>Konzum</label>
             <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Ribola" class="store-filter mr-2"/>Ribola</label>
             <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Spar" class="store-filter mr-2"/>Spar</label>
+            <label class="block text-gray-900 dark:text-gray-200"><input type="checkbox" value="Studenac" class="store-filter mr-2"/>Studenac</label>
           </div>
         </div>
 
@@ -103,7 +174,7 @@
             id="category-filters-toggle"
           >
             Kategorija
-            <span class="transition-transform duration-200" id="category-filters-arrow">▼</span>
+            <span class="transition-transform duration-200" id="category-filters-arrow"  style="display:inline-block; transform: rotate(-90deg);">▼</span>
           </button>
           <div id="category-filters" class="space-y-3 hidden">
             <label class="block text-gray-900 dark:text-gray-200">
@@ -160,11 +231,11 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col mt-4 md:mt-0">
+    <main class="flex-1 flex flex-col mt-4 md:mt-0 overflow-auto">
 
       <!-- Search bar -->
-      <div class="flex mb-6 gap-2 items-center">
-        <div class="relative flex-1">
+      <div class="sticky top-0 z-30 bg-white dark:bg-gray-800 pb-2 flex flex-row align-center">
+        <div class="relative flex-1 ">
           <input
             id="search"
             type="text"
@@ -182,28 +253,32 @@
 
         <select
           id="search-field-select"
-          class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          class="w-[80px] md:w-[140px] border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           aria-label="Search by field"
         >
           <option value="naziv">Naziv</option>
           <option value="barkod">Barkod</option>
         </select>
-
         <select
           id="sort-select"
-          class="border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          class="w-[90px] md:w-[140px] border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           aria-label="Sort items"
         >
-          <option value="">Sort by</option>
-          <option value="price-desc">Price ↑</option>
-          <option value="price-asc">Price ↓</option>
-          <option value="name-asc">Name A-Z</option>
-          <option value="name-desc">Name Z-A</option>
+          <option value="">Sortiraj</option>
+          <option value="price-desc">Cijena ↑</option>
+          <option value="price-asc">Cijena ↓</option>
+          <option value="name-asc">Naziv A-Z</option>
+          <option value="name-desc">Naziv Z-A</option>
         </select>
+                <button id="mobile-filters-toggle"
+          class="block md:hidden border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          aria-label="Filteri">
+          ...
+        </button>
       </div>
 
       <!-- Search results -->
-      <section id="items" class="space-y-4  overflow-auto  text-gray-900 dark:text-gray-200">
+      <section id="items" class="space-y-4 text-gray-900 dark:text-gray-200 ">
         <!-- JS inserts results here -->
       </section>
     </main>
@@ -216,6 +291,7 @@
   >
     🌓
   </button>
+
 
   <script>
     // MOBILE SIDEBAR TOGGLE LOGIC
@@ -249,31 +325,9 @@
     closeSidebar(); // for initial load
 
     // ACCORDION LOGIC
-    function accordionToggle(btnId, contentId, arrowId) {
-      const btn = document.getElementById(btnId);
-      const content = document.getElementById(contentId);
-      const arrow = document.getElementById(arrowId);
-      btn.addEventListener('click', function(){
-        const expanded = content.classList.contains('hidden');
-        // collapse both if open at start
-        document.getElementById('store-filters').classList.add('hidden');
-        document.getElementById('category-filters').classList.add('hidden');
-        document.getElementById('store-filters-arrow').classList.remove('rotate-0');
-        document.getElementById('store-filters-arrow').classList.add('-rotate-90');
-        document.getElementById('category-filters-arrow').classList.remove('rotate-0');
-        document.getElementById('category-filters-arrow').classList.add('-rotate-90');
-        if (expanded) {
-          content.classList.remove('hidden');
-          arrow.classList.add('rotate-0');
-          arrow.classList.remove('-rotate-90');
-        }
-      });
-    }
+
+
     // Set up arrows initial state and event listeners
-    document.getElementById('store-filters-arrow').classList.add('-rotate-90');
-    document.getElementById('category-filters-arrow').classList.add('-rotate-90');
-    accordionToggle('store-filters-toggle', 'store-filters', 'store-filters-arrow');
-    accordionToggle('category-filters-toggle', 'category-filters', 'category-filters-arrow');
 
 
 
@@ -282,6 +336,7 @@
 </html>
 
   <script>
+    
 function mapCategory(str) {
     if (typeof str !== 'string' || str.length < 2) return null;
   const prefix = str.slice(0, 2).toUpperCase();
@@ -298,6 +353,9 @@ function mapCategory(str) {
 }
 
     window.addEventListener('DOMContentLoaded', () => {
+
+
+
       filters.forEach(f => f.addEventListener("change", filterItems));
 document.querySelectorAll(".category-filter, .store-filter").forEach(f => 
   f.addEventListener("change", filterItems)
@@ -337,6 +395,9 @@ document.querySelectorAll("#address-search").forEach(f =>
 var items = [];
 const input = document.getElementById("search");
 const button = document.getElementById("search-button");
+document.querySelectorAll('.store-filter').forEach(el => {
+  el.addEventListener('change', filterItems);
+});
 
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
@@ -384,10 +445,14 @@ function createResultElement(item) {
   addressFilter = document.getElementById("address-search").value;
   const div = document.createElement("div");
   div.className = "border border-gray-200 rounded p-4 shadow-sm hover:shadow-md transition";
-
-  let thing = "€" + item.maloprodajna_cijena + "/kom";
-  if (item.jedinica_mjere != "KOM") {
-    thing = "€" + item.maloprodajna_cijena + "/kom <small>(€" + item.cijena_za_jedinicu_mjere + "/kg)</small>";
+cijena = item.maloprodajna_cijena;
+if (cijena <= 0 || cijena == "" ){
+  cijena = "?";
+}
+  let thing = "€" + cijena + "/kom";
+  
+  if (item.jedinica_mjere.toUpperCase() != "KOM") {
+    thing = "€" + item.maloprodajna_cijena + "/kom <small>(€" + item.cijena_za_jedinicu_mjere + "/"+item.jedinica_mjere+")</small>";
   }
 
 
@@ -560,7 +625,13 @@ function filterItems() {
     return matchesSearch && matchesCategory && matchesStore && matchesAddress;
   });
 
-  console.log(`${filtered.length} JE DULJINa`);
+  const counts = {};
+
+  // Count all keys 'kategorija' and 'trgovina'
+
+
+  // Count occurrences of kategorija and trgovina
+
   renderItems(filtered);
 }
 document.getElementById("min-price").addEventListener("input", filterItems);
@@ -593,8 +664,8 @@ function parsePrice(str) {
   if (!str) return -Infinity; // treat missing price as very low to push it first (or use Infinity to push last)
   return parseFloat(str.replace(',', '.')) || -Infinity;
 }
-    document.getElementById("sort-select").addEventListener("change", (e) => {
-  const val = e.target.value;
+function sortItems(){
+  const val = document.getElementById("sort-select").value;
   if (!val) return renderItems(items); // or filtered items
 
   const sorted = [...items]; // or [...items] if no filter applied
@@ -610,7 +681,11 @@ function parsePrice(str) {
   }
 
   renderItems(sorted);
+} 
+document.getElementById("sort-select").addEventListener("change", (e) => {
+  sortItems()
 });
+  sortItems();
 
   </script>
 

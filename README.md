@@ -20,4 +20,5 @@ Trenutačno, možete jedino `git clone`-ati repository, napraviti venv i pokrenu
 - Spar
 - Konzum
 - Ribola
+- Studenac
 

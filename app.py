@@ -2,14 +2,48 @@ from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, date
 import parser
+import polars as pl # type:ignore
+from apscheduler.schedulers.background import BackgroundScheduler
+import crawler
 
-import polars as pl #type:ignore
-df = pl.scan_ndjson("output/grouped_2025-05-30.ndjson")
+import threading
+
 app = FastAPI()
-# Serve static files (html, css, js) from 'static' folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Global variable for the dataframe
+df = None
+df_lock = threading.Lock()
+
+def load_latest_df():
+    global df
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    file_path = f"output/grouped_{today_str}.ndjson"
+    if Path(file_path).exists():
+        with df_lock:
+            df = pl.scan_ndjson(file_path)
+        print(f"Loaded dataframe for {today_str}")
+    else:
+        print(f"File {file_path} does not exist yet.")
+
+def daily_job():
+    today = date.today()
+    crawler.collectioncrawl(today)
+    load_latest_df()
+
+# Initial load at startup
+load_latest_df()
+
+# Schedule the job every day at 9 AM
+scheduler = BackgroundScheduler()
+scheduler.add_job(daily_job, 'cron', hour=9, minute=0)
+scheduler.start()
+
+@app.on_event("shutdown")
+def shutdown_event():
+    scheduler.shutdown()
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -45,7 +79,8 @@ async def search(request: Request, query: str = "", type: str = Query("naziv")):
     }
 
     loop = asyncio.get_event_loop()
-    results = await loop.run_in_executor(None, parser.find, filters, df)
+    with df_lock:
+        results = await loop.run_in_executor(None, parser.find, filters, df)
 
     return JSONResponse(content=results)
 

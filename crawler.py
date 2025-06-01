@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 import urllib.parse
 import concurrent.futures
 import csv
+import libarchive
+import time
 from datetime import datetime, date
 def crawlRibola(dateToCrawl=date.today()):
     url = "https://ribola.hr/ribola-cjenici/?date=" #29.05.2025
@@ -40,6 +42,8 @@ def crawlRibola(dateToCrawl=date.today()):
 
 
     def process_link(link):
+        print("spavam na",link)
+        time.sleep(0.2)
         result = []
         print(f"Processing link: {link}")
         if link.endswith(".xml"):
@@ -160,7 +164,12 @@ def crawlKonzum(dateToCrawl=date.today()):
                     "adresa": address,
                     "trgovina": "Konzum"
                 })
-
+        elif csv_response.status_code == 403:
+            print("Konzum te spoofao, sorry; malo manje pokušaja kasnije")
+            return []
+        else:
+            print("Greška kod Konzuma, status",csv_response.status_code)
+            return []
         print(f"Processed {len(result)} entries from {link}")
         return result
     # Dynamically set max_workers based on your CPU (6 cores, 12 threads)
@@ -170,11 +179,6 @@ def crawlKonzum(dateToCrawl=date.today()):
     for r in results:
         data.extend(r)
     return data
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 import time
 import requests
@@ -184,38 +188,19 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 def crawlSpar(dateToCrawl=date.today()):
     data = []
-    url = "https://www.spar.hr/datoteke_cjenici/index.html"
-    options = Options()
-    options.add_argument("--headless")  # comment out for visual debug
-    driver = webdriver.Chrome(options=options)
-    wait = WebDriverWait(driver, 10)
-
-    driver.get(url)
-    wait.until(EC.presence_of_element_located((By.ID, "datePicker")))
-
-    date_str = dateToCrawl.strftime('%Y-%m-%d')
+    date_string = dateToCrawl.strftime('%Y%m%d')
+    url = f'https://www.spar.hr/datoteke_cjenici/Cjenik{date_string}.json'
     dateactual = dateToCrawl.strftime("%d.%m.%Y")
-    print(date_str)
-
-    # Find date picker fresh
-    date_picker = driver.find_element(By.ID, "datePicker")
-    date_picker.click()
-    driver.execute_script(
-        "arguments[0].value = arguments[1];"
-        "arguments[0].dispatchEvent(new Event('input', { bubbles: true }));"
-        "arguments[0].dispatchEvent(new Event('change', { bubbles: true }));",
-        date_picker, date_str
-    )
-    date_picker.send_keys("\t")
-
-    # Wait for the DOM to reload links
-    wait.until(EC.presence_of_element_located((By.LINK_TEXT, "Preuzmi")))
-
-    # Re-find the links **after** the DOM update
-    links_elements = driver.find_elements(By.LINK_TEXT, "Preuzmi")
-
+    try:
+        res = requests.get(url)
+        res.raise_for_status()
+        dataaa = res.json()
+        links = [file['URL'] for file in dataaa.get('files', [])]
+    except Exception as e:
+        print("Spar neuspješan",e)
     # Extract hrefs
-    links = [a.get_attribute('href') for a in links_elements]
+    #links = []
+   
     def process_link(link):
             result = []
             print(f"Processing link: {link}")
@@ -274,7 +259,6 @@ def crawlSpar(dateToCrawl=date.today()):
             except requests.RequestException as e:
                 print(f"Failed to get {link}: {e}")
 
-    driver.quit()
     max_workers = min(32, (os.cpu_count() or 1) * 5)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         results = list(executor.map(process_link, links))
@@ -300,45 +284,18 @@ def crawlSpar(dateToCrawl=date.today()):
 #             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 from collections import defaultdict
 
-def group_addresses_from_file(input_filepath, output_filepath):
-    grouped = defaultdict(lambda: {
-        "datum": None,
-        "naziv": None,
-        "sifra": None,
-        "marka": None,
-        "neto_kolicina": None,
-        "jedinica_mjere": None,
-        "maloprodajna_cijena": None,
-        "cijena_za_jedinicu_mjere": None,
-        "maloprodajna_cijena_akcija": None,
-        "najniza_cijena": None,
-        "sidrena_cijena": None,
-        "barkod": None,
-        "kategorije": None,
-        "trgovina": None,
-        "adresa": []
-    })
 
-    with open(input_filepath, 'r', encoding='utf-8') as f:
-        i = 0
-        for line in f:
-            i+=1
-            if i%10000==0:
-                print(i)
-            item = json.loads(line)
-            key = (item["naziv"], item["trgovina"])
-            entry = grouped[key]
-            if entry["naziv"] is None:
-                for k in entry.keys():
-                    if k != "adresa":
-                        entry[k] = item.get(k)
-            if item["adresa"] not in entry["adresa"]:
-                entry["adresa"].append(item["adresa"])
 
-    # Write combined output as NDJSON
-    with open(output_filepath, 'w', encoding='utf-8') as out:
-        for record in grouped.values():
-            out.write(json.dumps(record, ensure_ascii=False) + '\n')
+
+def extract_zip_in_memory(zip_bytes):
+    extracted = {}
+    with libarchive.memory_reader(zip_bytes) as archive:
+        for entry in archive:
+            chunks = []
+            for block in entry.get_blocks():
+                chunks.append(block)
+            extracted[entry.pathname] = b"".join(chunks)
+    return extracted
 
 import zipfile #type: ignore
 import tempfile
@@ -356,61 +313,54 @@ def crawlStudenac(dateToCrawl=date.today()):
 
     #we want to get the a href to get the xml download lin
     zip_bytes = response.content
-    with zipfile.ZipFile(BytesIO(zip_bytes)) as z:
-        for file_info in z.infolist():
-            if not file_info.is_dir():
-                try:
-                    text = z.read(file_info.filename).decode('utf-8')
-                    root = ET.fromstring(text)
-                    prodajni_objekt = root.find("ProdajniObjekt")
-                    if prodajni_objekt is not None:
-                        adresa = prodajni_objekt.findtext("Adresa", default="")
-                        oblik = prodajni_objekt.findtext("Oblik", default="")
-                        oznaka = prodajni_objekt.findtext("Oznaka", default="")
-                        broj_pohrane = prodajni_objekt.findtext("BrojPohrane", default="")
-                        proizvodi = prodajni_objekt.find("Proizvodi")
-                        print("radim na",adresa)
-                        if proizvodi is not None:
-                            for proizvod in proizvodi.findall("Proizvod"):
-                                naziv = proizvod.findtext("NazivProizvoda", default="")
-                                sifra = proizvod.findtext("SifraProizvoda", default="")
-                                marka = proizvod.findtext("MarkaProizvoda", default="")
-                                neto_kolicina = proizvod.findtext("NetoKolicina", default="")
-                                jedinica_mjere = proizvod.findtext("JedinicaMjere", default="")
-                                maloprodajna_cijena = proizvod.findtext("MaloprodajnaCijena", default="")
-                                cijena_za_jedinicu_mjere = proizvod.findtext("CijenaZaJedinicuMjere", default="")
-                                maloprodajna_cijena_akcija = proizvod.findtext("MaloprodajnaCijenaAkcija", default="")
-                                najniza_cijena = proizvod.findtext("NajnizaCijena", default="")
-                                sidrena_cijena = proizvod.findtext("SidrenaCijena", default="")
-                                barkod = proizvod.findtext("Barkod", default="")
-                                kategorije = proizvod.findtext("KategorijeProizvoda", default="")
-                                result.append({
-                                    "datum": dateactual,
-                                    "naziv": naziv,
-                                    "sifra": sifra,
-                                    "marka": marka,
-                                    "neto_kolicina": neto_kolicina,
-                                    "jedinica_mjere": jedinica_mjere,
-                                    "maloprodajna_cijena": maloprodajna_cijena,
-                                    "cijena_za_jedinicu_mjere": cijena_za_jedinicu_mjere,
-                                    "maloprodajna_cijena_akcija": maloprodajna_cijena_akcija,
-                                    "najniza_cijena": najniza_cijena,
-                                    "sidrena_cijena": sidrena_cijena,
-                                    "barkod": barkod,
-                                    "kategorije": kategorije,
-                                    "adresa": adresa,
-                                    "trgovina": "Studenac",
-                                })
-                except Exception as e:
-                    print(f"Error processing some file: {e}")
+    files = extract_zip_in_memory(zip_bytes)
+    for filename in files:
+        text = files[filename].decode('utf-8')
+        root = ET.fromstring(text)
+        prodajni_objekt = root.find("ProdajniObjekt")
+        if prodajni_objekt is not None:
+            adresa = prodajni_objekt.findtext("Adresa", default="")
+            oblik = prodajni_objekt.findtext("Oblik", default="")
+            oznaka = prodajni_objekt.findtext("Oznaka", default="")
+            broj_pohrane = prodajni_objekt.findtext("BrojPohrane", default="")
+            proizvodi = prodajni_objekt.find("Proizvodi")
+            print("radim na",adresa)
+            if proizvodi is not None:
+                for proizvod in proizvodi.findall("Proizvod"):
+                    naziv = proizvod.findtext("NazivProizvoda", default="")
+                    sifra = proizvod.findtext("SifraProizvoda", default="")
+                    marka = proizvod.findtext("MarkaProizvoda", default="")
+                    neto_kolicina = proizvod.findtext("NetoKolicina", default="")
+                    jedinica_mjere = proizvod.findtext("JedinicaMjere", default="")
+                    maloprodajna_cijena = proizvod.findtext("MaloprodajnaCijena", default="")
+                    cijena_za_jedinicu_mjere = proizvod.findtext("CijenaZaJedinicuMjere", default="")
+                    maloprodajna_cijena_akcija = proizvod.findtext("MaloprodajnaCijenaAkcija", default="")
+                    najniza_cijena = proizvod.findtext("NajnizaCijena", default="")
+                    sidrena_cijena = proizvod.findtext("SidrenaCijena", default="")
+                    barkod = proizvod.findtext("Barkod", default="")
+                    kategorije = proizvod.findtext("KategorijeProizvoda", default="")
+                    result.append({
+                        "datum": dateactual,
+                        "naziv": naziv,
+                        "sifra": sifra,
+                        "marka": marka,
+                        "neto_kolicina": neto_kolicina,
+                        "jedinica_mjere": jedinica_mjere,
+                        "maloprodajna_cijena": maloprodajna_cijena,
+                        "cijena_za_jedinicu_mjere": cijena_za_jedinicu_mjere,
+                        "maloprodajna_cijena_akcija": maloprodajna_cijena_akcija,
+                        "najniza_cijena": najniza_cijena,
+                        "sidrena_cijena": sidrena_cijena,
+                        "barkod": barkod,
+                        "kategorije": kategorije,
+                        "adresa": adresa,
+                        "trgovina": "Studenac",
+                    })
+
     return result
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        results = list(executor.map(process_link, links))
 
-    for r in results:
-        data.extend(r)
-    return data
+
 
 import polars as pl #type: ignore
 def statisticsCrawl(dateToCrawl=date.today()):
@@ -427,9 +377,10 @@ def statisticsCrawl(dateToCrawl=date.today()):
     "maslinovo ulje": "3858882211550"
 }
     
-    konzum = crawlKonzum()
+   
     spar = crawlSpar()
     ribola = crawlRibola()
+    konzum = crawlKonzum()
 
     # Convert lists to Polars DataFrames with store info
     df_konzum = pl.DataFrame(konzum).with_columns(pl.lit("Konzum").alias("trgovina"))
@@ -474,21 +425,75 @@ def statisticsCrawl(dateToCrawl=date.today()):
     return {dateToCrawl.strftime("%d.%m.%Y"):result}
 
 import timeit
+
+
+
+def group_addresses_from_json(input_json, output_filepath):
+    grouped = defaultdict(lambda: {
+        "datum": None,
+        "naziv": None,
+        "sifra": None,
+        "marka": None,
+        "neto_kolicina": None,
+        "jedinica_mjere": None,
+        "maloprodajna_cijena": None,
+        "cijena_za_jedinicu_mjere": None,
+        "maloprodajna_cijena_akcija": None,
+        "najniza_cijena": None,
+        "sidrena_cijena": None,
+        "barkod": None,
+        "kategorije": None,
+        "trgovina": None,
+        "adresa": []
+    })
+
+    for i, item in enumerate(input_json, 1):
+        if i % 10000 == 0:
+            print(i)
+        key = (item["naziv"], item["trgovina"])
+        entry = grouped[key]
+        if entry["naziv"] is None:
+            for k in entry.keys():
+                if k != "adresa":
+                    entry[k] = item.get(k)
+        if item["adresa"] not in entry["adresa"]:
+            entry["adresa"].append(item["adresa"])
+
+    with open(output_filepath, 'w', encoding='utf-8') as out:
+        for record in grouped.values():
+            out.write(json.dumps(record, ensure_ascii=False) + '\n')
+
+def collectioncrawl(dateToCrawl=date.today()):
+    """Crawls all stores and returns a combined list which is then saved to a file called output/grouped_<date>.ndjson"""
+    if not isinstance(dateToCrawl, date):
+        raise ValueError("dateToCrawl must be a datetime.date object")
+    date_str = dateToCrawl.strftime("%Y-%m-%d")
+    output_filepath = f"output/grouped_{date_str}.ndjson"
+    if os.path.exists(output_filepath):
+        print(f"File {output_filepath} already exists, skipping crawl.")
+        return
+    print(f"Crawling data for {dateToCrawl.strftime('%d.%m.%Y')}...")
+    if not os.path.exists("output"):
+        os.makedirs("output")
+    # Crawl each store
+    studenac = crawlStudenac(dateToCrawl)
+    spar = crawlSpar(dateToCrawl)
+    ribola = crawlRibola(dateToCrawl)
+    konzum = crawlKonzum(dateToCrawl)
+    combined = [*konzum, *spar, *ribola, *studenac]
+    print(f"Crawled {len(combined)} items from all stores.")
+    # Group addresses and save to file
+    group_addresses_from_json(combined, output_filepath)
+    print(f"Grouped data saved to {output_filepath}")
+
+
+
 if __name__ == "__main__":
     # start = timeit.timeit()
     # print(statisticsCrawl())
     # print("trebalo",(timeit.timeit()-start)*1000,"ms")
     # input()
-    dateToCrawl = date.today()
-    konzum = crawlKonzum()
-    spar = crawlSpar()
-    ribola = crawlRibola()
-    combined = [*konzum, *spar, *ribola]
-    name = "output/combined_" + dateToCrawl.strftime("%Y-%m-%d") + ".ndjson"
-    with open(name, "w", encoding="utf-8") as f:
-        for item in combined:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
-
+    dateToCrawl = datetime.strptime("29.05.2025", "%d.%m.%Y").date()
 
 
 
