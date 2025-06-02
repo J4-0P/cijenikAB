@@ -156,7 +156,7 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
             <span class="transition-transform duration-200" id="store-filters-arrow" style="display:inline-block; transform: rotate(-90deg);">▼</span>
 
           </button>
-          <div id="store-filters" class="space-y-3 hidden">
+          <div id="store-filters" class="space-y-3 hidden mt-2 mb-4">
             <div class="flex items-center space-x-2">
               <input type="checkbox" value="Konzum" class="store-filter mr-2" id="store-kon" />
               <label for="store-kon" class="text-gray-900 dark:text-gray-200">Konzum</label>
@@ -173,7 +173,10 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
               <input type="checkbox" value="Studenac" class="store-filter mr-2" id="store-stu" />
               <label for="store-stu" class="text-gray-900 dark:text-gray-200">Studenac</label>
             </div>
-          </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="Plodine" class="store-filter mr-2" id="store-plod" />
+              <label for="store-plod" class="text-gray-900 dark:text-gray-200">Plodine</label>
+            </div>
         </div>
 
         <!-- CATEGORY FILTERS ACCORDION -->
@@ -188,7 +191,7 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
             Kategorija
             <span class="transition-transform duration-200" id="category-filters-arrow"  style="display:inline-block; transform: rotate(-90deg);">▼</span>
           </button>
-          <div id="category-filters" class="space-y-3 hidden">
+          <div id="category-filters" class="space-y-3 hidden mt-2 mb-4">
             <div class="flex items-center space-x-2">
               <input type="checkbox" value="PROIZVODI ZA KUĆANSTVO" class="filter mr-2" id="cat-kućanstvo" />
               <label for="cat-kućanstvo" class="text-gray-900 dark:text-gray-200">Proizvodi za kućanstvo</label>
@@ -376,7 +379,7 @@ function mapCategory(str) {
 }
 
     window.addEventListener('DOMContentLoaded', () => {
-
+      console.log("OK")
 
 
       filters.forEach(f => f.addEventListener("change", filterItems));
@@ -392,20 +395,24 @@ document.querySelectorAll("#address-search").forEach(f =>
     searchInput.addEventListener("change", filterItems);
     filters.forEach(f => f.addEventListener("change", filterItems));
   const params = new URLSearchParams(window.location.search);
-        const typeParam = params.get('type');
-      if (typeParam === 'barcode') {
-        document.getElementById("search-field-select").value = "barkod";
-        console.log(parseInt(params.get('search'))%1000);
-        const searchStr = params.get('search') || '';
-        const last4 = searchStr.slice(-4);
-        document.title = "Rezultati za barkod ..." + last4;
-      }
-  const searchQuery = params.get('search');
-  if (searchQuery && typeParam != 'barcode') {
+        const typeParam = params.get('type') || 'naziv'; // default to 'naziv' if not set
+  const searchQuery = params.get('query');
+  console.log("Type param:", typeParam);
+  if (searchQuery) {
+    console.log("Search query:", searchQuery);
     const input = document.getElementById('search');
     const button = document.getElementById('search-button');
-    document.title = "Rezultati za " + searchQuery;
+    if (typeParam === "barcode") {
+      document.getElementById("search-field-select").value = "barkod";
+      console.log(parseInt(params.get('query')) % 1000);
+      const searchStr = params.get('query') || '';
+      const last4 = searchStr.slice(-4);
+      document.title = "Rezultati za barkod ..." + last4;
+    } else {
+      document.title = "Rezultati za " + searchQuery;
+    }
     input.value = searchQuery;
+    console.log("Setting input value to:", searchQuery);
     button.click(); // or call your search function directly
   }
 });
@@ -498,7 +505,9 @@ if (item.jedinica_mjere.toUpperCase() != "KOM") {
   thing = "€" + (isNaN(parseFloat(item.maloprodajna_cijena)) ? "?" : parseFloat(item.maloprodajna_cijena).toFixed(2)) + "/kom <br><small>(€" + cijenaMjere + "/" + item.jedinica_mjere + ")</small>";
 }
 
-
+function titleCase(str) {
+    return str.replace(/\b(hipermarket|supermarket)\b/gi, '').toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+}
 
 
 
@@ -510,7 +519,7 @@ if (item.jedinica_mjere.toUpperCase() != "KOM") {
 
   // If filtering removes all addresses, show some fallback
   const addressesHtml = filteredAddresses.length
-    ? filteredAddresses.map(addr => `<a class="hover:bg-gray-300 dark:hover:bg-gray-700" href="https://www.google.com/maps/search/${encodeURIComponent(addr)}" target="_blank" rel="noopener noreferrer">${addr}</a>`).join('<br>')
+    ? filteredAddresses.map(addr => `<a class="hover:bg-gray-300 dark:hover:bg-gray-700" href="https://www.google.com/maps/search/${encodeURIComponent(addr)}" target="_blank" rel="noopener noreferrer">${titleCase(addr)}</a>`).join('<br>')
     : null;
 
    const num = filteredAddresses.length;

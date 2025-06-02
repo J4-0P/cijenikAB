@@ -26,4 +26,5 @@ Trenutačno, možete jedino `git clone`-ati repository, napraviti venv i pokrenu
 - Konzum
 - Ribola
 - Studenac
+- Plodine
 

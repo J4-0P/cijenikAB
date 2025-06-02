@@ -6,3 +6,4 @@ requests
 bs4
 libarchive-c
 concurrent-log-handler
+rapidfuzz

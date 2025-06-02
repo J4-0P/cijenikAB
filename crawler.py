@@ -144,7 +144,8 @@ def crawlKonzum(dateToCrawl=date.today()):
                 address = ",".join(parts[1:3]).strip()
             # Process each row in the CSV after the header
             for values in reader:
-                
+                # Decode each value from latin1 and encode to utf-8, then decode back to str
+                values = [v.encode('latin1').decode('utf-8') if isinstance(v, str) else v for v in values]
                 # Map CSV columns by position if header is not reliable
                 # 0: NAZIV PROIZVODA, 1: ŠIFRA PROIZVODA, 2: MARKA PROIZVODA, 3: NETO KOLIČINA, 4: JEDINICA MJERE, 5: MALOPRODAJNA CIJENA, 6: CIJENA ZA JEDINICU MJERE, 7: MPC ZA VRIJEME POSEBNOG OBLIKA PRODAJE, 8: NAJNIŽA CIJENA U POSLJEDNIH 30 DANA, 9: SIDRENA CIJENA NA 2.5.2025, 10: BARKOD, 11: KATEGORIJA PROIZVODA
                 result.append({
@@ -294,6 +295,61 @@ def crawlSpar(dateToCrawl=date.today()):
 #             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 from collections import defaultdict
 
+def crawlPlodine(dateToCrawl=date.today()):
+    # https://www.plodine.hr/cjenici/cjenici_02_06_2025_07_00_01.zip
+    url = "https://www.plodine.hr/cjenici/cjenici_"+ dateToCrawl.strftime("%d_%m_%Y") + "_07_00_01.zip"
+    print(url)
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(f"Failed to download Plodine data for {dateToCrawl.strftime('%d.%m.%Y')}, status code: {response.status_code}")
+        return []
+    zip_bytes = response.content
+    # Extract the csv files from the zip archive
+    extracted_files = extract_zip_in_memory(zip_bytes)
+    result = []
+    dateactual = dateToCrawl.strftime("%d.%m.%Y")
+    for filename, content in extracted_files.items():
+        print(f"Processing file: {filename}")
+          #HIPERMARKET_ANTE_STARCEVICA_21_10290_ZAPRESIC_064_19_02062025015134.csv example filename
+        address = filename.replace(".csv","").split("_")
+        print(address)
+        # Find the index of the last non-digit part before the numeric suffixes
+        index = len(address) - 1
+        for i in range(len(address) - 1, 0, -1):
+            if not address[i].isdigit():
+                index = i + 1
+                break
+        # Join all parts except the first and the trailing numeric parts
+        address = " ".join(address[1:index])
+        print(f"Extracted address: {address}")
+
+        # Naziv proizvoda;Sifra proizvoda;Marka proizvoda;Neto kolicina;Jedinica mjere;Maloprodajna cijena;Cijena po JM;MPC za vrijeme posebnog oblika prodaje;Najniza cijena u poslj. 30 dana;Sidrena cijena na 2.5.2025;Barkod;Kategorija proizvoda;
+        # Decode the content from bytes to string
+        text = content.decode('utf-8')
+        # Use csv.reader to process the file content after decoding
+        reader = csv.reader(io.StringIO(text), delimiter=';')
+        header = next(reader, None)  # Skip header
+        for values in reader:
+            result.append({
+                "datum": dateactual,
+                "naziv": values[0] if len(values) > 0 else "",  # Naziv proizvoda
+                "sifra": values[1] if len(values) > 1 else "",  # Sifra proizvoda
+                "marka": values[2] if len(values) > 2 else "",  # Marka proizvoda
+                "neto_kolicina": values[3] if len(values) > 3 else "",  # Neto kolicina
+                "jedinica_mjere": values[4] if len(values) > 4 else "",  # Jedinica mjere
+                "maloprodajna_cijena": values[5] if len(values) > 5 else "",  # Maloprodajna cijena
+                "cijena_za_jedinicu_mjere": values[6] if len(values) > 6 else "",  # Cijena po JM
+                "maloprodajna_cijena_akcija": values[7] if len(values) > 7 else "",  # MPC za vrijeme posebnog oblika prodaje
+                "najniza_cijena": values[8] if len(values) > 8 else "",  # Najniza cijena u poslj. 30 dana
+                "sidrena_cijena": values[9] if len(values) > 9 else "",  # Sidrena cijena na 2.5.2025
+                "barkod": values[10] if len(values) > 10 else "",  # Barkod
+                "kategorije": values[11] if len(values) > 11 else "",  # Kategorija proizvoda
+                "adresa": address,
+                "trgovina": "Plodine"
+            })
+        print(f"Processed {len(result)} entries from {filename}")
+
+    return result
 
 
 
@@ -490,7 +546,9 @@ def collectioncrawl(dateToCrawl=date.today()):
     spar = crawlSpar(dateToCrawl)
     ribola = crawlRibola(dateToCrawl)
     konzum = crawlKonzum(dateToCrawl)
-    combined = [*konzum, *spar, *ribola, *studenac]
+    plodine = crawlPlodine(dateToCrawl)
+    print("Done, crawling stores.")
+    combined = [*konzum, *spar, *ribola, *studenac, *plodine]
     print(f"Crawled {len(combined)} items from all stores.")
     # Group addresses and save to file
     group_addresses_from_json(combined, output_filepath)
@@ -503,7 +561,10 @@ if __name__ == "__main__":
     # print(statisticsCrawl())
     # print("trebalo",(timeit.timeit()-start)*1000,"ms")
     # input()
-    dateToCrawl = datetime.strptime("29.05.2025", "%d.%m.%Y").date()
+    collectioncrawl()
+    # dateToCrawl = datetime.strptime("29.05.2025", "%d.%m.%Y").date()
+    # crol = crawlPlodine(dateToCrawl)
+    # group_addresses_from_json(crol, f"output/plodine_{dateToCrawl.strftime('%Y-%m-%d')}.ndjson")
 
 
 
