@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from datetime import datetime, date
@@ -9,6 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import crawler
 from datetime import timedelta
 import threading
+import json
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -88,22 +89,21 @@ async def about(request: Request):
 
 import asyncio
 @app.get("/search")
-async def search(request: Request, query: str = "", type: str = Query("naziv")):
+async def search_stream(request: Request, query: str = "", type: str = Query("naziv")):
     if not query:
         return JSONResponse(content={"error": "No query provided"}, status_code=400)
 
     filtered_parts = [part for part in query.split() if len(part) >= 3]
     if not filtered_parts:
         return JSONResponse(content={"error": "Query too short"}, status_code=400)
-    filters = {
-        type: {"contains": filtered_parts}
-    }
+    filters = {type: {"contains": filtered_parts}}
 
-    loop = asyncio.get_event_loop()
-    with df_lock:
-        results = await loop.run_in_executor(None, parser.find, filters, df)
+    def result_generator():
+        with df_lock:
+            for item in parser.find(filters, df):
+                yield json.dumps(item, ensure_ascii=False) + "\n"
 
-    return JSONResponse(content=results)
+    return StreamingResponse(result_generator(), media_type="application/x-ndjson")
 
 
 @app.exception_handler(404)

@@ -11,6 +11,27 @@
       darkMode: 'class'
     }
   </script>
+  <style>
+    .scrollbar-left::-webkit-scrollbar {
+  direction: rtl; /* Hack for some edge cases */
+}
+
+.scrollbar-left {
+  direction: rtl; /* Flips scrollbar to left side */
+}
+.scrollbar-left > * {
+  direction: ltr; /* Keep content reading left-to-right */
+}
+
+    @media (min-width: 768px) {
+      html {
+        font-size: 90%;
+      }
+      body {
+        zoom: 0.9;
+      }
+    }
+  </style>
 
   <style>
     input[type="number"]::-webkit-inner-spin-button,
@@ -117,10 +138,11 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
 
   <!-- Main app/maindiv -->
   <div
-    class="fixed top-0 left-0 md:top-48 md:left-1/2 md:-translate-x-1/2
+    class="pl-0 fixed top-0 left-0 md:top-48 md:left-1/2 md:-translate-x-1/2
       w-full h-screen md:w-full md:max-w-5xl md:h-[80vh]
-      box-border bg-white dark:bg-gray-800 rounded-none md:rounded shadow-md p-4 md:p-6 flex flex-col md:flex-row gap-0 md:gap-8 border-0 md:border border-gray-300 dark:border-gray-700  maindiv
-      "
+      box-border bg-white dark:bg-gray-800 rounded-none md:rounded shadow-md p-4 md:p-6 flex flex-col md:flex-row gap-0 md:gap-8 border-0 md:border border-gray-300 dark:border-gray-700 maindiv pl-0
+    "
+    style="padding-left:15px;"
     >
   <div id="overlay"
     class="fixed inset-0 bg-black/60 transition-opacity duration-300 opacity-0 pointer-events-none md:hidden" style="z-index: 35;"></div>
@@ -128,7 +150,9 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
     <aside
       id="sidebar"
       class="
-
+      
+        scrollbar-left md:scrollbar-none
+        overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 md:scrollbar-thumb-gray-300 md:scrollbar-track-gray-100 md:scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-left
         fixed top-0 left-0 h-full w-72 max-w-full z-50 bg-white dark:bg-gray-800 shadow-lg p-6 transition-transform duration-300
         transform -translate-x-full
         md:static md:w-64 md:flex-shrink-0 md:h-auto md:translate-x-0 md:bg-transparent md:shadow-none md:p-0 md:sticky
@@ -144,7 +168,7 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
       <div class="space-y-3">
 
         <!-- STORE FILTERS ACCORDION -->
-        <div>
+        <div > 
           <button
             type="button"
             class="w-full flex justify-between items-center mb-2 font-semibold text-gray-900 dark:text-gray-200"
@@ -248,6 +272,18 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
             />
           </div>
         </div>
+        <div class="mb-4">
+          <label for="brand-search" class="font-semibold mb-2 block text-gray-900 dark:text-gray-200">Marka</label>
+          <input
+            type="text"
+            id="brand-search"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+            placeholder="Upiši marku..."
+          />
+        </div>
+        <script>
+          
+        </script>
       </div>
     </aside>
 
@@ -274,7 +310,7 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
 
         <select
           id="search-field-select"
-          class="w-[80px] md:w-[140px] border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          class="w-[70px] md:w-[140px] border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           aria-label="Search by field"
         >
           <option value="naziv">Naziv</option>
@@ -282,19 +318,19 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
         </select>
         <select
           id="sort-select"
-          class="w-[90px] md:w-[140px] border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          class="w-[60px] md:w-[140px] border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           aria-label="Sort items"
         >
-          <option value="">Sortiraj</option>
+          <option value="">Sort</option>
           <option value="price-desc">Cijena ↓</option>
           <option value="price-asc">Cijena ↑</option>
           <option value="name-asc">Naziv A-Z</option>
           <option value="name-desc">Naziv Z-A</option>
         </select>
                 <button id="mobile-filters-toggle"
-          class="block md:hidden border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+          class="block w-[40px] md:hidden border border-gray-300 dark:border-gray-600 rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           aria-label="Filteri">
-          ...
+          🔍
         </button>
       </div>
 
@@ -390,6 +426,7 @@ document.querySelectorAll("#address-search").forEach(f =>
   f.addEventListener("input", filterItems)
 
 );
+document.getElementById("brand-search").addEventListener("input", filterItems);
 
 
     searchInput.addEventListener("change", filterItems);
@@ -398,6 +435,7 @@ document.querySelectorAll("#address-search").forEach(f =>
         const typeParam = params.get('type') || 'naziv'; // default to 'naziv' if not set
   const searchQuery = params.get('query');
   console.log("Type param:", typeParam);
+  console.log("Search query:", searchQuery);
   if (searchQuery) {
     console.log("Search query:", searchQuery);
     const input = document.getElementById('search');
@@ -451,6 +489,10 @@ input.addEventListener("keydown", (e) => {
     // Show spinner
     document.getElementById('loading-spinner').classList.remove('hidden');
 
+    // Clear previous results and items before new search
+    items.length = 0;
+    itemsContainer.innerHTML = "";
+
     try {
       
   // Returns true if at least one string length >= 3,
@@ -462,20 +504,46 @@ if (queryParts.every(s => s.length < 3)) {
   return;
 }
 
-      const response = await fetch(`search?query=${encodeURIComponent(query)}&type=${document.getElementById("search-field-select").value}`);
-      window.history.replaceState({}, '', `?query=${encodeURIComponent(query)}&type=${document.getElementById("search-field-select").value}`);
-      itemsContainer.innerHTML = "";
-      if (!response.ok) throw new Error('Network error');
+const response = await fetch(`search?query=${encodeURIComponent(query)}&type=${document.getElementById("search-field-select").value}`);
+if (!response.ok) throw new Error('Network error');
 
-      resultsDicts = await response.json();
-      items = [];
-      console.log('Loaded dicts:', resultsDicts);
-      resultsDicts.forEach(item => {
-        console.log("sad turam", item);
-        items.push(item);
-        //onsole.log(`pravim za predmet ${item.naziv}`);
-        itemsContainer.appendChild(createResultElement(item));
-      });
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+let buffer = '';
+i = 0
+const startTime = performance.now();
+items = [];
+while (true) {
+  i += 1;
+  if (i == 5){
+    console.log("This took", performance.now() - startTime, "ms");
+    document.getElementById('loading-spinner').classList.add('hidden');
+
+  }
+  const { done, value } = await reader.read();
+  if (done){
+    
+     break;
+  }
+  buffer += decoder.decode(value, { stream: true });
+  let lines = buffer.split('\n');
+  buffer = lines.pop(); // Keep the last (maybe incomplete) line in buffer
+
+  for (const line of lines) {
+    if (line.trim() === "") continue;
+    const item = JSON.parse(line);
+    // process each item as it arrives:
+    items.push(item);
+    itemsContainer.appendChild(createResultElement(item));
+  }
+}
+
+// If buffer has remaining data, process that last line:
+if (buffer.trim() !== "") {
+  const item = JSON.parse(buffer);
+  items.push(item);
+  itemsContainer.appendChild(createResultElement(item));
+}
       filterItems();
     } catch (error) {
       console.error('Failed to fetch search results:', error);
@@ -513,7 +581,7 @@ function titleCase(str) {
 
 
   // Filter addresses based on the addressFilter (case-insensitive)
-  const filteredAddresses = item.adresa.filter(addr => 
+  const filteredAddresses = item.adresa[0].filter(addr => 
     addr.toLowerCase().includes(addressFilter.toLowerCase())
   );
 
@@ -540,7 +608,10 @@ function titleCase(str) {
 
   div.innerHTML = `
 <div class="flex justify-between items-start mb-2 ">
+  <div class="flex flex-col">
   <h3 class="font-semibold text-lg leading-none">${item.naziv}</h3>
+  <h4 class="text-gray-600 dark:text-gray-400 text-md">${item.marka || "Nema marke"}</h4>
+  </div>
   <div class="flex flex-col items-end">
     <div class="text-green-700 font-bold text-lg">${thing}</div>
     <div class="text-sm text-gray-600 dark:text-gray-400 mt-1 ">${item.barkod}</div>
@@ -582,6 +653,7 @@ function titleCase(str) {
           // Don't show "no results" while loading
           return;
         }
+      
         itemsContainer.innerHTML = "<p class='text-gray-500 dark:text-gray-400'>Nema rezultata. Probajte tražiti ponovno ili promijeniti filtere.</p>";
         return;
       }
@@ -646,16 +718,19 @@ function filterItems() {
       selectedStores.length === 0 || selectedStores.includes(item.trgovina);
 
     const matchesAddress =
-      !addressTerm || item.adresa.some(addr => addr.toLowerCase().includes(addressTerm));
+      !addressTerm || item.adresa[0].some(addr => addr.toLowerCase().includes(addressTerm));
 
+    const matchesBrand = !document.getElementById("brand-search").value ||
+      item.marka.toLowerCase().includes(document.getElementById("brand-search").value.toLowerCase());
       // Count stores
       // Only count for items that pass all filters (i.e., currently displayed)
       // (moved counting after filtering)
-      return matchesSearch && matchesCategory && matchesStore && matchesAddress;
+      return matchesSearch && matchesCategory && matchesStore && matchesAddress && matchesBrand;
       });
 
       // Count stores and categories in the filtered results
       filtered.forEach(item => {
+        console.log(item.marka);
       if (item.trgovina) {
         counts.STORES[item.trgovina] = (counts.STORES[item.trgovina] || 0) + 1;
       }

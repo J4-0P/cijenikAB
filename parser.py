@@ -211,11 +211,106 @@ def normalize_string(s):
         c for c in unicodedata.normalize('NFKD', s)
         if unicodedata.category(c) != 'Mn'
     )
-from rapidfuzz import fuzz
-# ...existing code...
+
+def normalize_string(s):
+    if not isinstance(s, str):
+        return s
+    return ''.join(
+        c for c in unicodedata.normalize('NFKD', s)
+        if unicodedata.category(c) != 'Mn'
+    )
+
 def find(filters: dict, df, fuzzy=False, fuzzy_threshold=70):
+    # Build filtering conditions
+    conditions = []
+    for col, val in filters.items():
+        if isinstance(val, dict):  # Comparison or pattern
+            if "lt" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) < val["lt"])
+            if "gt" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) > val["gt"])
+            if "le" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) <= val["le"])
+            if "ge" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) >= val["ge"])
+            if "eq" in val:
+                conditions.append(pl.col(col).cast(pl.Float64, strict=False) == val["eq"])
+            if "exclude" in val:
+                exclude_norm = normalize_string(val["exclude"].lower())
+                conditions.append(
+                    ~pl.col(col)
+                    .cast(str)
+                    .str.to_lowercase()
+                    .map_elements(normalize_string, return_dtype=str)
+                    .str.contains(re.escape(exclude_norm), literal=True)
+                )
+            contains = val.get("contains", None)
+            if contains is not None:
+                if isinstance(contains, str):
+                    contains = [contains]
+                if not any(len(s) >= 3 for s in contains):
+                    return
+                # Only support non-fuzzy for now in streaming
+                col_exprs = [
+                    pl.col(col)
+                    .cast(str)
+                    .str.to_lowercase()
+                    .map_elements(normalize_string, return_dtype=str)
+                    .str.contains(re.escape(normalize_string(contain.lower())), literal=True)
+                    for contain in contains
+                ]
+                conditions.append(reduce(operator.or_, col_exprs))
+        else:  # Exact match
+            if isinstance(val, str):
+                val = normalize_string(val)
+                conditions.append(
+                    pl.col(col)
+                    .cast(str)
+                    .str.to_lowercase()
+                    .map_elements(normalize_string, return_dtype=str)
+                    == val.lower()
+                )
+            else:
+                conditions.append(pl.col(col) == val)
 
+    if not conditions:
+        return
 
+    mask = reduce(operator.and_, conditions)
+    filtered = df.filter(mask).collect()
+
+    # Group results by (naziv, trgovina) and yield one at a time
+    grouped = defaultdict(lambda: {
+        "datum": None,
+        "naziv": None,
+        "sifra": None,
+        "marka": None,
+        "neto_kolicina": None,
+        "jedinica_mjere": None,
+        "maloprodajna_cijena": None,
+        "cijena_za_jedinicu_mjere": None,
+        "maloprodajna_cijena_akcija": None,
+        "najniza_cijena": None,
+        "sidrena_cijena": None,
+        "barkod": None,
+        "kategorije": None,
+        "trgovina": None,
+        "adresa": []
+    })
+    data = filtered.to_dicts()
+    for item in data:
+        key = (item["naziv"], item["trgovina"])
+        entry = grouped[key]
+        if entry["naziv"] is None:
+            for k in entry.keys():
+                if k != "adresa":
+                    entry[k] = item.get(k)
+        if item["adresa"] not in entry["adresa"]:
+            entry["adresa"].append(item["adresa"])
+    for result in grouped.values():
+        yield result
+def oldfind(filters: dict, df):
+    start_time = timeit.default_timer()
     conditions = []
     for col, val in filters.items():
         if isinstance(val, dict):  # Comparison or pattern
@@ -239,35 +334,23 @@ def find(filters: dict, df, fuzzy=False, fuzzy_threshold=70):
                     .apply(normalize_string)
                     .str.contains(re.escape(exclude_norm), literal=True)
                 )
-            contains = val.get("contains", None)
-            if contains is not None:
-                if isinstance(contains, str):
-                    contains = [contains]
+            contains = val["contains"]
+            if isinstance(contains, str):
+                contains = [contains]
                 if not any(len(s) >= 3 for s in contains):
                     return []
 
-                if fuzzy:
-                    # Fuzzy match using rapidfuzz
-                    def fuzzy_match(x, patterns=contains, threshold=fuzzy_threshold):
-                        x_norm = normalize_string(str(x).lower())
-                        return any(fuzz.partial_ratio(x_norm, normalize_string(p.lower())) >= threshold for p in patterns)
-                    col_exprs = [
-                        pl.col(col)
-                        .cast(str)
-                        .apply(lambda x: fuzzy_match(x), return_dtype=pl.Boolean)
-                    ]
-                    conditions.append(reduce(operator.or_, col_exprs))
-                else:
-                    # Normalize both the column and the search expression
-                    col_exprs = [
-                        pl.col(col)
-                        .cast(str)
-                        .str.to_lowercase()
-                        .str.normalize("NFKD")
-                        .str.contains(re.escape(normalize_string(contain.lower())), literal=True)
-                        for contain in contains
-                    ]
-                    conditions.append(reduce(operator.or_, col_exprs))
+            # Normalize both the column and the search expression
+            col_exprs = [
+                pl.col(col)
+                .cast(str)
+                .str.to_lowercase()
+                .map_elements(normalize_string, return_dtype=str)
+                .cast(str)
+                .str.contains(re.escape(normalize_string(contain.lower())), literal=True)
+                for contain in contains
+            ]
+            conditions.append(reduce(operator.or_, col_exprs))
 
         else:  # Exact match
             if isinstance(val, str):
@@ -334,8 +417,10 @@ def find(filters: dict, df, fuzzy=False, fuzzy_threshold=70):
         print(filters,"je preee dugo, čak",len(returnal))
         return []
     print("pronašao",len(returnal),"rezultata za",filters)
+    print("Time taken:", (timeit.default_timer() - start_time) * 1000, "ms")
     return returnal if filtered.height > 0 else []
-# ...existing code...
+
+
 from collections import defaultdict
 def find_all(filters: dict, df):
     conditions = []

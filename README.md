@@ -12,14 +12,16 @@ Ovaj alat pokušava to što jednostavnije obaviti.
 *Napravljeno po ideji https://usporedicijene.info*
 
 ## Korištenje
-Pristupiti će se moći preko stranice https://cijene.brinu.me
+Pristupiti se može preko stranice https://cijene.brinu.me
 
-Trenutačno, možete jedino `git clone`-ati repository, napraviti venv i pokrenuti `pip install -r requirements.txt` njime te `uvicorn app:app` u tom direktoriju.
+Također, možete `git clone`-ati repository, napraviti venv i pokrenuti `pip install -r requirements.txt` njime te `uvicorn app:app` u tom direktoriju.
 
 ## Značajke
 1. [x] Pretraga po imenu ili barkodu
 2. [x] Sortiranje po trgovini, kategoriji i adresi
-3. [ ] Košarica
+3. [ ] Statistika
+4. [ ] Košarica
+5. [ ] Skeniranje kodova
 
 ## Podržane trgovine
 - Spar
