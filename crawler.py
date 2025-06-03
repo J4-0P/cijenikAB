@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 import urllib.parse
 import concurrent.futures
 import csv
-import libarchive
+import libarchive #type: ignore
 import time
 from datetime import datetime, date
 def crawlRibola(dateToCrawl=date.today()):
@@ -425,6 +425,52 @@ def crawlStudenac(dateToCrawl=date.today()):
 
     return result
 
+def crawlBakmaz(dateToCrawl=date.today()):
+    url = "https://www.bakmaz.hr/o-nama/"
+    #format date into  	2025-06-03
+    date_str = dateToCrawl.strftime("%Y-%m-%d")
+    dateactual = dateToCrawl.strftime("%d.%m.%Y")
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(f"Failed to download Bakmaz data for {dateToCrawl.strftime('%d.%m.%Y')}, status code: {response.status_code}")
+        return []
+    soup = bs4.BeautifulSoup(response.text, "html.parser")
+    data = []
+    #find anchor whose href contians %d%m%Y and get href
+    anchors = soup.find_all("a", href=True)
+    print(anchors)
+    links = [a['href'] for a in anchors if dateToCrawl.strftime("%d%m%Y") in a['href']]
+    if not links:
+        print(f"No links found for Bakmaz on {dateToCrawl.strftime('%d.%m.%Y')}")
+        return []
+    print(f"Found 1 link for Bakmaz")
+    text = requests.get(links[0]).content.decode('windows-1252')  # Bakmaz uses windows-1252 encoding
+    # Parse the csv data from the text
+    reader = csv.reader(io.StringIO(text), delimiter=';')
+    header = next(reader, None)  # Skip header
+    for values in reader:
+        # "Naziv proizvoda";"Šifra proizvoda";"Marka proizvoda";"Neto kolièina";"Jedinica mjere";"Maloprodajna cijena";"Cijena za jedinicu mjere";"MPC za vrijeme posebnog oblika prodaje";"Najniža cijena u poslj.30 dana";"Sidrena cijena na 2.5.2025";"Barkod";"Kategorija proizvoda"
+        # change from windows-1252 to utf-8
+        #values = [v.encode('windows-1252').decode('utf-8') if isinstance(v, str) else v for v in values]
+        data.append({
+            "datum": dateactual,
+            "naziv": values[0] if len(values) > 0 else "",  # Naziv proizvoda
+            "sifra": values[1] if len(values) > 1 else "",  # Sifra proizvoda
+            "marka": values[2] if len(values) > 2 else "",  # Marka proizvoda
+            "neto_kolicina": values[3] if len(values) > 3 else "",  # Neto kolicina
+            "jedinica_mjere": values[4] if len(values) > 4 else "",  # Jedinica mjere
+            "maloprodajna_cijena": values[5] if len(values) > 5 else "",  # Maloprodajna cijena
+            "cijena_za_jedinicu_mjere": values[6] if len(values) > 6 else "",  # Cijena po JM
+            "maloprodajna_cijena_akcija": values[7] if len(values) > 7 else "",  # MPC za vrijeme posebnog oblika prodaje
+            "najniza_cijena": values[8] if len(values) > 8 else "",  # Najniza cijena u poslj.30 dana
+            "sidrena_cijena": values[9] if len(values) > 9 else "",  # Sidrena cijena na 2.5.2025
+            "barkod": values[10] if len(values) > 10 else "",  # Barkod
+            "kategorije": values[11] if len(values) > 11 else "",  # Kategorija proizvoda
+            "adresa": "*", # Bakmaz doesn't provide address in the CSV, so assume all locations are the same
+            "trgovina": "Bakmaz"
+        })
+    return data
+
 
 
 
@@ -447,6 +493,7 @@ def statisticsCrawl(dateToCrawl=date.today()):
     spar = crawlSpar()
     ribola = crawlRibola()
     konzum = crawlKonzum()
+    studenac = crawlStudenac()
 
     # Convert lists to Polars DataFrames with store info
     df_konzum = pl.DataFrame(konzum).with_columns(pl.lit("Konzum").alias("trgovina"))
@@ -547,8 +594,10 @@ def collectioncrawl(dateToCrawl=date.today()):
     ribola = crawlRibola(dateToCrawl)
     konzum = crawlKonzum(dateToCrawl)
     plodine = crawlPlodine(dateToCrawl)
+    bakmaz = crawlBakmaz(dateToCrawl)
     print("Done, crawling stores.")
-    combined = [*konzum, *spar, *ribola, *studenac, *plodine]
+    combined = [*konzum, *spar, *ribola, *studenac, *plodine, *bakmaz]
+    print(f"Combined data from all stores, total items: {len(combined)}")
     print(f"Crawled {len(combined)} items from all stores.")
     # Group addresses and save to file
     group_addresses_from_json(combined, output_filepath)
@@ -556,12 +605,12 @@ def collectioncrawl(dateToCrawl=date.today()):
 
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # start = timeit.timeit()
     # print(statisticsCrawl())
     # print("trebalo",(timeit.timeit()-start)*1000,"ms")
     # input()
-    collectioncrawl()
+    #print(crawlBakmaz()[0])
     # dateToCrawl = datetime.strptime("29.05.2025", "%d.%m.%Y").date()
     # crol = crawlPlodine(dateToCrawl)
     # group_addresses_from_json(crol, f"output/plodine_{dateToCrawl.strftime('%Y-%m-%d')}.ndjson")
