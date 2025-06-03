@@ -201,6 +201,10 @@ document.getElementById('store-filters-toggle').addEventListener('click', storet
               <input type="checkbox" value="Plodine" class="store-filter mr-2" id="store-plod" />
               <label for="store-plod" class="text-gray-900 dark:text-gray-200">Plodine</label>
             </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" value="Bakmaz" class="store-filter mr-2" id="store-bakmaz" />
+              <label for="store-bakmaz" class="text-gray-900 dark:text-gray-200">Bakmaz</label>
+            </div>
         </div>
 
         <!-- CATEGORY FILTERS ACCORDION -->
@@ -582,7 +586,7 @@ function titleCase(str) {
 
   // Filter addresses based on the addressFilter (case-insensitive)
   const filteredAddresses = item.adresa[0].filter(addr => 
-    addr.toLowerCase().includes(addressFilter.toLowerCase())
+    addr.toLowerCase().includes(addressFilter.toLowerCase()) || addr.trim() === "*"
   );
 
   // If filtering removes all addresses, show some fallback
@@ -596,6 +600,9 @@ function titleCase(str) {
 
     const lastDigit = num % 10;
     const lastTwoDigits = num % 100;
+    if (filteredAddresses.length === 1 && filteredAddresses[0].trim() === "*") {
+      somevar = "Na svim adresama";
+    } else
     if (num === 1) {
       somevar = "Na jednoj adresi";
     } else if (lastDigit === 1 && lastTwoDigits !== 11) {
@@ -620,7 +627,7 @@ function titleCase(str) {
 
 <p class="text-gray-600 dark:text-gray-300 mb-2">
   ${somevar}
-  <button class="text-blue-500 ml-2 toggle-dropdown">+</button>
+  ${somevar === "Na svim adresama" ? "" : '<button class="text-blue-500 ml-2 toggle-dropdown">+</button>'}
 </p>
 <div class="dropdown-content hidden mb-2 text-sm text-gray-700 dark:text-gray-400 ">
   ${addressesHtml}
@@ -637,9 +644,11 @@ function titleCase(str) {
   const dropdown = div.querySelector('.dropdown-content');
 
 
-    button.addEventListener('click', () => {
-      dropdown.classList.toggle('hidden');
-    });
+    if (button) {
+      button.addEventListener('click', () => {
+        dropdown.classList.toggle('hidden');
+      });
+    }
 
 
   return div;
@@ -670,7 +679,7 @@ function filterItems() {
   console.log("FILTRIRAM");
   const searchTerm = searchInput.value.toLowerCase().trim();
   const terms = searchTerm.split(/\s+/); // split by any whitespace
-  document.querySelector("h2").textContent = "Filteri za: " + terms.join(", ");
+  document.querySelector("h2").textContent = "Filteri za " + terms.join(", ") + ` (${filtered.length})`;
   const selectedCategories = Array.from(document.querySelectorAll(".filter"))
     .filter(f => f.checked)
     .map(f => f.value);
