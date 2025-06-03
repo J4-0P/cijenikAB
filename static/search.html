@@ -644,9 +644,11 @@ function titleCase(str) {
   const dropdown = div.querySelector('.dropdown-content');
 
 
-    button.addEventListener('click', () => {
-      dropdown.classList.toggle('hidden');
-    });
+    if (button) {
+      button.addEventListener('click', () => {
+        dropdown.classList.toggle('hidden');
+      });
+    }
 
 
   return div;
