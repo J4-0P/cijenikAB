@@ -29,4 +29,5 @@ Također, možete `git clone`-ati repository, napraviti venv i pokrenuti `pip in
 - Ribola
 - Studenac
 - Plodine
+- Bakmaz
 
