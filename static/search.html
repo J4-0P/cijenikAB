@@ -679,7 +679,7 @@ function filterItems() {
   console.log("FILTRIRAM");
   const searchTerm = searchInput.value.toLowerCase().trim();
   const terms = searchTerm.split(/\s+/); // split by any whitespace
-  document.querySelector("h2").textContent = "Filteri za: " + terms.join(", ");
+  document.querySelector("h2").textContent = "Filteri za " + terms.join(", ") + ` (${filtered.length})`;
   const selectedCategories = Array.from(document.querySelectorAll(".filter"))
     .filter(f => f.checked)
     .map(f => f.value);
