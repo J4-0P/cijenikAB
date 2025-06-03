@@ -679,7 +679,11 @@ function filterItems() {
   console.log("FILTRIRAM");
   const searchTerm = searchInput.value.toLowerCase().trim();
   const terms = searchTerm.split(/\s+/); // split by any whitespace
+<<<<<<< HEAD
   document.querySelector("h2").textContent = "Filteri za " + terms.join(", ") + ` (${filtered.length})`;
+=======
+  document.querySelector("h2").textContent = "Filteri za " + terms.join(", ") + ` (${items.length})`;
+>>>>>>> 5eb3e6390b4a9a4173b8019abcaa88592d9a8fab
   const selectedCategories = Array.from(document.querySelectorAll(".filter"))
     .filter(f => f.checked)
     .map(f => f.value);
