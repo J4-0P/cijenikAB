@@ -812,14 +812,21 @@ function parsePrice(str) {
 }
 function sortItems(){
   const val = document.getElementById("sort-select").value;
-  if (!val) return renderItems(items); // or filtered items
+  if (!val) return renderItems(items);
 
-  const sorted = [...items]; // or [...items] if no filter applied
+  const sorted = [...items];
+
+  function getSortPrice(item) {
+    // Use maloprodajna_cijena if available, otherwise cijena_za_jedinicu_mjere
+    let price = item.maloprodajna_cijena ?? item.cijena_za_jedinicu_mjere;
+    if (!price) return -Infinity;
+    return parseFloat(String(price).replace(',', '.')) || -Infinity;
+  }
 
   if (val === "price-asc") {
-    sorted.sort((a, b) => parsePrice(a.maloprodajna_cijena) - parsePrice(b.maloprodajna_cijena));
+    sorted.sort((a, b) => getSortPrice(a) - getSortPrice(b));
   } else if (val === "price-desc") {
-    sorted.sort((a, b) => parsePrice(b.maloprodajna_cijena) - parsePrice(a.maloprodajna_cijena));
+    sorted.sort((a, b) => getSortPrice(b) - getSortPrice(a));
   } else if (val === "name-asc") {
     sorted.sort((a, b) => a.naziv.localeCompare(b.naziv));
   } else if (val === "name-desc") {
@@ -827,7 +834,7 @@ function sortItems(){
   }
 
   renderItems(sorted);
-} 
+}
 document.getElementById("sort-select").addEventListener("change", (e) => {
   sortItems()
 });
